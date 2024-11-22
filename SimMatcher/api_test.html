@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+</head>
+<body>
+    <h1>API Test</h1>
+
+    <!-- Submit 기능 테스트 -->
+    <h2>Submit Message</h2>
+    <form id="submitForm">
+        <label for="submitInput">Enter a message:</label>
+        <input type="text" id="submitInput" name="submitMessage">
+        <button type="button" onclick="sendSubmitMessage()">Send Submit</button>
+    </form>
+
+    <!-- Extract 기능 테스트 -->
+    <h2>Extract Keywords</h2>
+    <form id="extractForm">
+        <label for="extractInput">Enter a review:</label>
+        <input type="text" id="extractInput" name="extractReview">
+        <button type="button" onclick="sendExtractReview_post()">Send Extract</button>
+    </form>
+
+    <!-- Match 기능 테스트 -->
+    <h2>Match Keywords from Review</h2>
+    <form id="matchForm">
+        <label for="matchTitle">Enter a Title:</label>
+        <input type="text" id="matchTitle" name="extractReview">
+        <label for="matchReview">Enter a Review:</label>
+        <input type="text" id="matchReview" name="extractReview">
+        <button type="button" onclick="sendMatchTitleReview()">Send Match</button>
+    </form>
+
+
+    <script>
+        // Submit 기능 요청 함수
+        async function sendSubmitMessage() {
+            const message = document.getElementById("submitInput").value;
+
+            const response = await fetch("http://127.0.0.1:8000/submit", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ message: message })
+            });
+
+            const result = await response.json();
+            console.log("Submit response:", result.message);
+            alert("Submit response: " + result.message);
+        }
+
+        //Extract 기능을 post로 구현함
+        async function sendExtractReview_post(){
+            const message = document.getElementById("extractInput").value;
+
+            const response = await fetch("http://127.0.0.1:8000/extract", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ review: message })
+            });
+
+            const result = await response.json();
+            console.log("Submit response:", result.keywords);
+            alert("Submit response: " + result.keywords);
+        }
+
+        //Match 기능 구현 Post
+        async function sendMatchTitleReview(){
+                const title = document.getElementById("matchTitle").value;
+                const review = document.getElementById("matchReview").value;
+
+                // Title과 Review를 JSON 형식으로 서버에 전송
+                const response = await fetch("http://127.0.0.1:8000/match", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ title: title, review: review })
+                });
+
+                // 서버로부터 JSON 응답을 받아서 처리
+                const result = await response.json();
+                console.log("Matched books:", result.recommend);
+                alert("Matched books: " + result.recommend);
+        }
+
+
+    </script>
+</body>
+</html>
