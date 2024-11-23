@@ -26,6 +26,27 @@ def create_followerRequest(
         )
 
 
+@router.get("/get_users_by_email")
+def get_users_by_email(email: str, db: MySQLConnection = Depends(get_mysql_connection)):
+    db.start_transaction()
+    try:
+        db.execute(f"SELECT * FROM userTable WHERE email LIKE '%{email}%'")
+        users = db.fetchall()
+        db.commit()
+        return [
+            User(id=user[0], nickname=user[1], email=user[2], uid=user[3])
+            for user in users
+        ]
+    except Exception as e:
+        # 오류 발생 시 롤백
+        print(f"오류 발생: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="이메일로 유저리스트 검색이 실패했습니다.",
+        )
+
+
 @router.get("/get_request_sender")
 def get_request_sender(
     receiverID: int, db: MySQLConnection = Depends(get_mysql_connection)
@@ -80,26 +101,24 @@ def createFriend(follower: Follower, db: MySQLConnection):
 
 
 def createReverseFriend(follower: Follower, db: MySQLConnection):
-    
     try:
         db.execute(
             "insert into followerTable(followerID, followeeID) values(%s, %s)",
             (follower.followerID, follower.followeeID),
         )
-        
+
         return {"result": "Success"}
     except Exception as e:
         raise e
 
 
 def deleteFriendRequest(senderID: int, receiverID: int, db: MySQLConnection):
-
     try:
         db.execute(
             "DELETE FROM followRequestTable WHERE senderID = %s AND receiverID = %s",
             (senderID, receiverID),
         )
-        
+
         return {"result": "Success"}
     except Exception as e:
         # 오류 발생 시 롤백
@@ -116,16 +135,16 @@ def create_friend_and_autoDelete(
         dbResponseCreateReverse = createReverseFriend(
             follower=Follower(
                 followerID=follower.followeeID, followeeID=follower.followerID
-            )
-            , db = db
+            ),
+            db=db,
         )
         dbResponseDelete = deleteFriendRequest(
-            senderID=follower.followeeID, receiverID=follower.followerID, db = db
+            senderID=follower.followeeID, receiverID=follower.followerID, db=db
         )
         db.commit()
         return dbResponseDelete
-    except Exception as e :
-         # 오류 발생 시 롤백
+    except Exception as e:
+        # 오류 발생 시 롤백
         print(f"오류 발생: {e}")
         db.rollback()
         raise HTTPException(
@@ -134,16 +153,17 @@ def create_friend_and_autoDelete(
         )
 
 
-
 @router.delete("/delete_friend_request")
 async def delete_friend_request(
     senderID: int, receiverID: int, db: MySQLConnection = Depends(get_mysql_connection)
 ):
     db.start_transaction()
     try:
-        dbResponse = deleteFriendRequest(senderID=senderID, receiverID=receiverID, db=db)
+        dbResponse = deleteFriendRequest(
+            senderID=senderID, receiverID=receiverID, db=db
+        )
     except Exception as e:
-         # 오류 발생 시 롤백
+        # 오류 발생 시 롤백
         print(f"오류 발생: {e}")
         db.rollback()
         raise HTTPException(
