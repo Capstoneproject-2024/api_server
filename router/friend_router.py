@@ -30,7 +30,7 @@ def create_followerRequest(
 def get_users_by_email(email: str, db: MySQLConnection = Depends(get_mysql_connection)):
     db.start_transaction()
     try:
-        db.execute(f"SELECT * FROM userTable WHERE email LIKE '%{email}%'")
+        db.execute("SELECT * FROM userTable WHERE email LIKE '%"+email+"%'")
         users = db.fetchall()
         db.commit()
         return [
