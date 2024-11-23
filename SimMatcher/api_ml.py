@@ -1,7 +1,11 @@
 from urllib.parse import urlencode
+from pydantic import BaseModel
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import json
+
+from pydantic import BaseModel
+
 from Extractor import *
 from SimilarityMatcher import *
 
@@ -21,14 +25,22 @@ app.add_middleware(
 extractor = Extractor()
 matcher = Matcher()
 
-def makeURLRequest(query : str):
-    # DB SQL request
-    encoded_query = urlencode({"query": query})
-    return f"https://rahanaman.cien.or.kr/execute_query?{encoded_query}"
+# Request Body Pydantic Models ======================================================================================
 
-def checkDBFailure(response: dict):
-    if response["result"] == "fail":
-        raise HTTPException(status_code=502, detail="DB result is fail")
+class ExtractBody(BaseModel):
+    review: str
+
+class MatchBody(BaseModel):
+    title: str
+    review: str
+
+class QuotBody(BaseModel):
+    #TODO - list name? or id?
+    title: str
+    quotation: str
+    book_list: list[str]
+
+# Request Body Pydantic Models ======================================================================================
 
 @app.post("/submit")
 # For testing
@@ -39,32 +51,53 @@ async def submit_message(request: Request):
     return {"message": f"Received: {message}"}
 
 
-@app.post("/match")
-async def match_similarity(request: Request):
+@app.post("/match/review2all")
+async def match_similarity(request: MatchBody):
     """
     get title & review
     return matched book list (book)
     :param request:
     :return:
     """
-    data = await request.json()
-    title = data.get("title")
-    review = data.get("review")
+    title = request.title
+    review = request.review
     extracted_keywords = extractor.extract_keyword_string(review, show_similarity=False)
     book_recommend = matcher.match_both(title, extracted_keywords)
-    print(f"Title: {title}\nKeywords: {extracted_keywords}\nRecommend: {book_recommend}")
+    #print(f"Title: {title}\nKeywords: {extracted_keywords}\nRecommend: {book_recommend}")
+
     return {"recommend": book_recommend}
+
+@app.post("/match/quot2all")
+async def match_quotation(request: QuotBody):
+
+    title = request.title
+    quot = request.quotation
+    book_list = request.book_list
 
 
 @app.post("/extract")
 async def extract_keyword(request: Request):
     data = await request.json()
     review = data.get("review")
-    keywords = extractor.extract_keyword_string(review, show_similarity=False)
+    keywords = extractor.extract_keyword_string(review, show_similarity=False, pos=True)
     #print(f"Received review: {review}")
     #print(f"Extracted Keywords: {keywords}")
+
     return {"keywords": keywords}
-# 처음에는 Get을 고려했으나 Post가 더 나아보임 (리뷰는 길기 때문에)
 
 
+
+
+
+
+# DB CHECK PART =====================================================================================================
+
+def makeURLRequest(query : str):
+    # DB SQL request
+    encoded_query = urlencode({"query": query})
+    return f"https://rahanaman.cien.or.kr/execute_query?{encoded_query}"
+
+def checkDBFailure(response: dict):
+    if response["result"] == "fail":
+        raise HTTPException(status_code=502, detail="DB result is fail")
 

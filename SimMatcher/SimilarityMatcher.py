@@ -40,7 +40,7 @@ class Matcher:
 
     def set_keywords(self,
                      book_keyword_path='BookInfo.txt',
-                     review_keyword_path='data/keywords/review_keyword_basic.csv'):
+                     review_keyword_path='data/keywords/POS_before_extraction.csv'):
         """
         Load keywords from review and book information files.
         Only for testing level. It should be replaced with DB API.
@@ -48,17 +48,17 @@ class Matcher:
         :param review_keyword_path:
         :return:
         """
-        # TODO
+
         """
         WARNING: If we try to get data from API, we should get both review and books
                 from API. API use book_id as a title.
         """
         #self.getBooks(book_path=book_keyword_path)
         # Change for select review file { Json / CSV }
-        # self.getReviews_json(review_path=review_keyword_path)
-        # self.getReviews_csv(review_path=review_keyword_path)
-        self.getReviews_API()
-        self.getBooks_API()
+        self.getReviews_csv(review_path=review_keyword_path)
+        self.getBooks(book_path=book_keyword_path)
+        #self.getReviews_API()
+        #self.getBooks_API()
 
         for book in self.books:
             self._add_keyword(book[0], book[1], Keytype.INFO)       # [0] = title, [1] = info
@@ -69,7 +69,6 @@ class Matcher:
         print("SimilarityMatcher.py: Keywords set")
 
     def _add_keyword(self, title: str, keywords: list, key_type: int):
-        # TODO 현재 한 책에 대한 복수개의 리뷰 처리가 안되어있음 -> 처리 완
         if title not in self.keywords:
             self.keywords[title] = {Keytype.INFO.name: [], Keytype.REVIEW.name: []}
 
@@ -79,9 +78,12 @@ class Matcher:
         elif key_type == Keytype.INFO:
             self.keywords[title][Keytype.INFO.name] = keywords
 
+# Similarity Functions ======================================================================================
+
     def _s2v_mean(self, sentence: str, voo='similar'):
         """
         Calculate vector of a single sentence using arithmetic mean
+        splitting the sentence
         :param sentence:
         :return:
         """
@@ -127,6 +129,8 @@ class Matcher:
         word2_vec = self._s2v_single(word2)
         print(f"Word1: '{word1}', Word2: '{word2}', similarity: '{self._cosine_similarity(word1_vec, word2_vec)}'")
 
+# Data Getting Functions ======================================================================================
+
     def getBooks(self, book_path='BookInfo.txt'):
         """
         Read book information from publishers
@@ -135,8 +139,6 @@ class Matcher:
         :return:
         """
         self.books = self.reader.readBooks(book_path)
-
-
 
     def getReviews_json(self, review_path='data.json'):
         """
@@ -156,11 +158,45 @@ class Matcher:
     def getBooks_API(self):
         self.books = self.reader.readInfoFromAPI()
 
+# Keyword Matching Functions ======================================================================================
+
     def set_proportion(self, review_proportion: int):
         if 0 <= review_proportion <= 100:
             self.review_proportion = review_proportion/100
         else:
             print("WARNING: Proportion should be in 0~100")
+
+    def match_quot(self, title_in: str, quot_keywords: list[str], book_list: list):
+        """
+        :param title_in:
+        :param quot_keywords:
+        :param book_list:
+        :return:
+        """
+
+        title_sample = '샘플타이틀'
+        keyword_sample = ['키워드1', '키워드2', '키워드3', '키워드4', '키워드5']
+        book_list = ['책1', '책2', '책3', '책4', '책5']
+
+        # TODO Get keywords of books using db api
+        book_keywords = [['책키11', '책키12', '책키13', '책키14', '책키15'],
+                         ['책키21', '책키22', '책키23', '책키24', '책키25'],
+                         ['책키31', '책키32', '책키33', '책키34', '책키35'],
+                         ['책키41', '책키42', '책키43', '책키44', '책키45'],
+                         ['책키51', '책키52', '책키53', '책키54', '책키55']]
+
+
+        book_keyword_flag = True
+        if book_list in None or len(book_list) < 2:
+            book_keyword_flag = False
+
+        if book_keyword_flag:
+            temp_list = []
+            for keyword_list in book_keywords:
+
+
+
+
 
     def match_both(self, title_in: str, keywords_in: list, recommend_number=5):
         """
@@ -188,9 +224,10 @@ class Matcher:
             sims_review = []    # 2 Dimensional List  CAUTION !!!
 
             # Calculate similarity: with book information
-            for info_keyword in info_keywords:
-                for keyword_in in keywords_in:
-                    sims_info.append(self.sentence_similarity(keyword_in, info_keyword))
+            if i_proportion > 0:
+                for info_keyword in info_keywords:
+                    for keyword_in in keywords_in:
+                        sims_info.append(self.sentence_similarity(keyword_in, info_keyword))
 
             # Calculate similarity: with reviews
             for review_keyword_list in review_keywords:
@@ -214,14 +251,14 @@ class Matcher:
                     avg_similarity = sum(review_sim) / len(review_sim)
                     review_sim_list.append(avg_similarity)
 
-                    # Choose / Calculate total review similarity
+                # Choose / Calculate total review similarity
                 review_sim_list.sort(reverse=True) # 내림차순 정렬 ->가장 높은 유사도 활용하기 위함. 바꿀 수 있다.
                 review_sim_avg = review_sim_list[0]
 
                 # Total Similarity
                 similarity = (r_proportion * review_sim_avg) + (i_proportion * info_sim_avg)
 
-            # TODO - we can just ignore when there is no review, but now I choose to use half
+
             # When there is no review/info
             else:
                 # To make review list without empty review
@@ -321,11 +358,11 @@ class Matcher:
             review_sample = self.reviews[review_num]
             print(f'Sample review: {review_sample}')
 
-            # TODO 복수개의 리뷰 처리 안되어있음
             recommend = self.match_both(review_sample[0], review_sample[1])
             print(f'Recommendation: {recommend}')
             review_num = int(input('\nEnter review number: '))
 
+    # Do Not Use This
     def match_book2review(self, reviews, books):
         print("Match test")
 
@@ -353,9 +390,12 @@ class Matcher:
             print(book_similarity)
             review_num = int(input('\nEnter review number: '))
 
+    # Do Not Use This
     def match_review2review(self):
         # Use 'match_both' method with review keyword input, proportion 0:1
         pass
+
+# Keyword Data Saving Functions ======================================================================================
 
     def test_and_save_as_csv(self, keyword_path: str, encoding='utf-8'):
         dataframe = pd.read_csv(keyword_path, encoding=encoding)
@@ -390,7 +430,6 @@ class Matcher:
         processed_data = []
         columns = ['title'] + [f'keyword{i}' for i in range(1, 6)]
 
-        # TODO 복수개의 리뷰 처리 안되어있음
         for title, keywords in self.keywords.items():
             info_keyword = (keywords[Keytype.INFO.name] + [''] * 5)[:5]
             review_keyword = (keywords[Keytype.REVIEW.name] + [''] * 5)[:5]
@@ -406,6 +445,8 @@ class Matcher:
     def save_satus_to_exit(self):
         #TODO
         pass
+
+# Others
 
 class Keytype(IntEnum):
     INFO = 0

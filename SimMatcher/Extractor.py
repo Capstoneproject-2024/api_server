@@ -25,6 +25,7 @@ class Extractor:
 
         # Stop words
         self.stopwords_path = stopwords_path
+        self.stopwords = []
         with open(self.stopwords_path, 'r', encoding='utf-8') as file:
             self.stopwords = [line.strip() for line in file.readlines()]
 
@@ -36,6 +37,7 @@ class Extractor:
         # Extractor
         # self.extractor = KeyBERT()
         self.extractor = KeyBERT(self.model)
+
 
         print(f'Extractor.py: extractor ready')
 
@@ -49,7 +51,7 @@ class Extractor:
         text = re.sub(r'[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9\s]', '', text)
 
         # Stopwords
-        stopwords = ['되다', '하다']
+        # stopwords = self.stopwords
 
         # 형태소 분석하여 명사, 형용사, 동사만 추출
         words = okt.pos(text, stem=True)
@@ -66,7 +68,7 @@ class Extractor:
         # return top_keywords
 
 
-    def extract_keyword_string(self, review: str, show_similarity=True, pos=False) -> list:
+    def extract_keyword_string(self, review: str, show_similarity=True, pos=True) -> list:
         if pos:
             review = self.extract_pos(review)
 

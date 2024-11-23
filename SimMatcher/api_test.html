@@ -76,7 +76,7 @@
                 const review = document.getElementById("matchReview").value;
 
                 // Title과 Review를 JSON 형식으로 서버에 전송
-                const response = await fetch("http://127.0.0.1:8000/match", {
+                const response = await fetch("http://127.0.0.1:8000/match/review2all", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
