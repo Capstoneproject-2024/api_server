@@ -44,6 +44,8 @@ class Extractor:
     def _read_review(self, review_path: str, encoding='cp949'):
         self.review = self.filereader.readReviews(review_path, encoding=encoding)
 
+# Basic, Essential Functions ======================================================================================
+
     def extract_pos(self, text):
         okt = Okt()
 
@@ -67,7 +69,6 @@ class Extractor:
         # top_keywords = word_counts.most_common(10)     # 빈도 높은 키워드 상위 10개 추출
         # return top_keywords
 
-
     def extract_keyword_string(self, review: str, show_similarity=True, pos=True) -> list:
         if pos:
             review = self.extract_pos(review)
@@ -90,6 +91,8 @@ class Extractor:
             keywords = temp
 
         return keywords
+
+# Utilizing Functions ======================================================================================
 
     def extract_keywords(self, review_path='data/Review_good.csv', encoding='cp949', show_similarity=True, pos=False):
         self._read_review(review_path=review_path, encoding=encoding)

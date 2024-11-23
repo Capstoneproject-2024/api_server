@@ -5,6 +5,7 @@ import numpy as np
 from FileReader import *
 from enum import IntEnum
 from datetime import datetime
+import math
 
 class Matcher:
     def __init__(self, modelpath='models/cc.ko.300.bin.gz', use_model=True):
@@ -198,31 +199,41 @@ class Matcher:
         else:
             print("WARNING: Proportion should be in 0~100")
 
-    def match_quot(self, title_in: str, quot_keywords: list, book_list: list, g_word = 'gw'):
+    def match_quot(self, title_in: str, quot_keywords: list, book_list: list, g_vocab ='gw'):
         """
         Have to test the extraction of quotation
+        Use [top-3 book keyword | top-3 quot_keyword]
         :param title_in:
         :param quot_keywords:
         :param book_list:
         :return:
         """
         title_sample = '샘플타이틀'
-        keyword_sample = ['키워드1', '키워드2', '키워드3', '키워드4', '키워드5']
-        book_list = ['책1', '책2', '책3', '책4', '책5']
-        group_word = g_word
+        quot_keywords_sample = ['키워드1', '키워드2', '키워드3', '키워드4', '키워드5']
+        book_list = ['제목1', '제목2', '제목3', '제목4', '제목5']
+        group_word = g_vocab
 
-        # TODO Get keywords of books using db api
+        # TODO Get keywords of books using db api -> created via 'book_list' input
         book_keywords = [['제목1', ['책키11', '책키12', '책키13', '책키14', '책키15']],
                          ['제목2', ['책키21', '책키22', '책키23', '책키24', '책키25']],
                          ['제목3', ['책키31', '책키32', '책키33', '책키34', '책키35']],
                          ['제목4', ['책키41', '책키42', '책키43', '책키44', '책키45']],
                          ['제목5', ['책키51', '책키52', '책키53', '책키54', '책키55']]]
 
-        # 읽은 책이 1권 이하일 경우 해당 과정 생략
+        # 읽은 책이 1권 이하일 경우 선정 과정 생략
         book_keyword_flag = True
-        if book_list in None or len(book_list) < 2:
+        selected_book_keywords = book_keywords[0]        # Selected book keywords is a single '1' book in book_keywords
+
+        # 책 0권 -> 에러로 판단
+        if book_list in None or len(book_list) < 1:
+            print('Sim_Matcher: match-quot get null book list')
+            return None
+
+        # 책 선정 - 1 권
+        if len(book_list) == 1:
             book_keyword_flag = False
 
+        # 책 선정 - 여러 권인 경우
         if book_keyword_flag:
             # Keyword 벡터로 변환한 리스트 만들기 -> [title, average_vector] 의 리스트
             book_vectors = []
@@ -230,7 +241,8 @@ class Matcher:
                 keyword_vector = [self._s2v_mean(key) for key in keywords]
                 book_vectors.append([title, np.mean(keyword_vector, axis=0)])
 
-            # Book input 간 유사도 계산
+            # Book input 간 유사도 계산 -> 전체를 대표할 수 있는지 평균 유사도 이용해 측정
+            book_similarities = []
             for i, (title_i, vector_i) in enumerate(book_vectors):
                 similarities = []
                 for j, (title_j, vector_j) in enumerate(book_vectors):
@@ -238,6 +250,23 @@ class Matcher:
                         sim = self._cosine_similarity(vector_i, vector_j)
                         similarities.append(sim)
                 # 평균 유사도 계산
+                average_similarity = np.mean(similarities)
+                book_similarities.append((title_i, average_similarity))
+
+            selected_book_title = max(book_similarities, key=lambda x: x[1])[0]
+            for i, book in enumerate(book_list):
+                if book[0] == selected_book_title:
+                    selected_book_keywords = book_keywords[i]
+
+        # 두 가지 키워드 절반씩 합치기 (인용구, 책)
+        aggregated_keywords = []
+        aggregated_keywords.extend(quot_keywords_sample[:math.ceil(len(quot_keywords_sample)/2)])
+        aggregated_keywords.extend(selected_book_keywords[:math.ceil(len(selected_book_keywords)/2)])
+
+        # Match
+        recommendation = self.match_both(title_in, aggregated_keywords)
+        return recommendation
+
 
     def match_q2q(self, title_in: str, quot_keywords: list, book_list: list, g_word = 'gw'):
         """
@@ -506,4 +535,4 @@ class Matcher:
 class Keytype(IntEnum):
     INFO = 0
     REVIEW = 1
-
+    G_WORD = 2
