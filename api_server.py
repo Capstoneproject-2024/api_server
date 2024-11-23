@@ -29,7 +29,7 @@ app.add_middleware(
 )
 
 @app.get("/")
-def main(db : MySQLConnection = Depends(get_mysql_connection)):
-    db.execute("SELECT count(*) FROM testDB.bookTable")
-    result = db.fetchall()
-    return result[0][0]
+def main():
+    #db.execute("SELECT count(*) FROM testDB.bookTable")
+    #result = db.fetchall()
+    return "hello"

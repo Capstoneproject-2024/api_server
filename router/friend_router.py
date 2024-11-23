@@ -111,7 +111,7 @@ def deleteFriendRequest(
     db.start_transaction()
     try:
         db.execute(
-            "DELETE FROM followRequestTable WHERE senderID = %s AND receiverID = %s"(
+            "DELETE FROM followRequestTable WHERE senderID = %s AND receiverID = %s",(
                 senderID, receiverID
             ),
         )
