@@ -74,7 +74,7 @@ def createFriend(
             "insert into followerTable(followerID, followeeID) values(%s, %s)",
             (follower.followerID, follower.followeeID),
         )
-        db.commit()
+        db.commit()   
         return {"result": "Success"}
     except Exception as e:
         # 오류 발생 시 롤백
