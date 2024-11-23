@@ -64,12 +64,14 @@ def review_visibility(
 @router.get("/get_user_reviews")
 def get_user_reviews(userID: int, db: MySQLConnection = Depends(get_mysql_connection)):
     try:
-        db.execute("SELECT * FROM reviewTable WHERE userID = " + str(userID))
+        db.execute(
+            f"SELECT * FROM reviewTable WHERE userID = {userID} ORDER BY reviewDate DESC;"
+        )
         dbResult = db.fetchall()
         db.commit()
         return [
             GetReview(
-                ID=review[0],
+                id=review[0],
                 userID=review[1],
                 bookID=review[2],
                 rating=review[3],

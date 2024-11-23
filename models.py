@@ -18,7 +18,7 @@ class Follower(BaseModel):
 
 # review 관련 모델
 class GetReview(BaseModel):
-    ID: int
+    id: int
     userID: int
     bookID: int
     rating: float
@@ -36,7 +36,7 @@ class PostReview(BaseModel):
 
 
 class ReviewVisibility(BaseModel):
-    reviewID : int
+    reviewID: int
     visibilityLevel: Optional[Literal["public", "private"]] = "public"
 
 
