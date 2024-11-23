@@ -1,3 +1,4 @@
+from typing import Literal, Optional
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -32,6 +33,11 @@ class PostReview(BaseModel):
     rating: float
     review: str
     quote: str
+
+
+class ReviewVisibility(BaseModel):
+    reviewID : int
+    visibilityLevel: Optional[Literal["public", "private"]] = "public"
 
 
 # Group 관련 모델
