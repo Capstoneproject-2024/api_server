@@ -106,7 +106,7 @@ def createReverseFriend(
 
 
 def deleteFriendRequest(
-    senderID: int, receiverID: int, db: MySQLConnection = Depends(get_mysql_connection)
+    senderID: int, receiverID: int, db: MySQLConnection 
 ):
     db.start_transaction()
     try:
@@ -122,7 +122,7 @@ def deleteFriendRequest(
         print(f"오류 발생: {e}")
         db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="친구 요청에 실패했습니다."
+            status_code=status.HTTP_400_BAD_REQUEST, detail="친구 요청 삭제에 실패했습니다."
         )
 
 
@@ -144,6 +144,6 @@ def create_friend_and_autoDelete(
 
 
 @router.delete("/delete_friend_request")
-async def delete_friend_request(senderID: int, receiverID: int):
+async def delete_friend_request(senderID: int, receiverID: int,db: MySQLConnection = Depends(get_mysql_connection)):
     dbResponse = deleteFriendRequest(senderID=senderID, receiverID=receiverID)
     return dbResponse
