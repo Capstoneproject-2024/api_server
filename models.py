@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 from datetime import datetime
 
+# uvicorn api_server:app --host 0.0.0.0 --port 8000 --reload
+
 
 # friend 관련 모델
 class FollowerRequest(BaseModel):
