@@ -20,6 +20,8 @@ class Matcher:
         self.keywords_categorized = {}  # { Keyword_category: [book1, book2, ...], Keyword_category: [...] }
         self.group_keyword = []         # TODO add group keywords
 
+
+
         self.set_keywords()
         print("SimMatcher.py: sim_matcher ready")
 
@@ -170,6 +172,7 @@ class Matcher:
         :param keywords: POS PROCESS HAVE TO BE DONE!!!!
         :return:
         """
+
         gk_pool = self.group_keyword
 
         keyword_group_similarity = []
@@ -197,12 +200,12 @@ class Matcher:
 
     def match_quot(self, title_in: str, quot_keywords: list, book_list: list, g_word = 'gw'):
         """
+        Have to test the extraction of quotation
         :param title_in:
         :param quot_keywords:
         :param book_list:
         :return:
         """
-
         title_sample = '샘플타이틀'
         keyword_sample = ['키워드1', '키워드2', '키워드3', '키워드4', '키워드5']
         book_list = ['책1', '책2', '책3', '책4', '책5']
@@ -221,16 +224,35 @@ class Matcher:
             book_keyword_flag = False
 
         if book_keyword_flag:
-            # Keyword 벡터로 변환한 리스트 만들기
+            # Keyword 벡터로 변환한 리스트 만들기 -> [title, average_vector] 의 리스트
             book_vectors = []
             for title, keywords in book_keywords:
                 keyword_vector = [self._s2v_mean(key) for key in keywords]
                 book_vectors.append([title, np.mean(keyword_vector, axis=0)])
 
             # Book input 간 유사도 계산
+            for i, (title_i, vector_i) in enumerate(book_vectors):
+                similarities = []
+                for j, (title_j, vector_j) in enumerate(book_vectors):
+                    if i != j:
+                        sim = self._cosine_similarity(vector_i, vector_j)
+                        similarities.append(sim)
+                # 평균 유사도 계산
 
-
-
+    def match_q2q(self, title_in: str, quot_keywords: list, book_list: list, g_word = 'gw'):
+        """
+        get Quotation, match with other Quotations only
+        Process: 1. calculate average Sentence Vector of quotation
+                 2. Compare with other quotations -> (n x n) full-compare for each quotation -> O(n^3)
+                 3. Sort for each quotation -> can get recommendation for each quotation
+        :param title_in:
+        :param quot_keywords:
+        :param book_list:
+        :param g_word:
+        :return:
+        """
+        # TODO
+        pass
 
     def match_both(self, title_in: str, keywords_in: list, recommend_number=5):
         """
