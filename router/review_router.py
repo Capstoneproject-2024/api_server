@@ -65,7 +65,18 @@ def review_visibility(
 def get_user_reviews(userID: int, db: MySQLConnection = Depends(get_mysql_connection)):
     try:
         db.execute(
-            f"SELECT * FROM reviewTable WHERE userID = {userID} ORDER BY reviewDate DESC;"
+            f"""
+SELECT *
+FROM reviewTable
+WHERE userID IN (
+    SELECT followeeID
+    FROM followerTable
+    WHERE followerID = {userID}
+    UNION
+    SELECT {userID}
+)
+ORDER BY reviewDate DESC;
+"""
         )
         dbResult = db.fetchall()
         db.commit()
