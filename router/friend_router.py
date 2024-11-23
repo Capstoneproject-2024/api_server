@@ -145,5 +145,5 @@ def create_friend_and_autoDelete(
 
 @router.delete("/delete_friend_request")
 async def delete_friend_request(senderID: int, receiverID: int,db: MySQLConnection = Depends(get_mysql_connection)):
-    dbResponse = deleteFriendRequest(senderID=senderID, receiverID=receiverID)
+    dbResponse = deleteFriendRequest(senderID=senderID, receiverID=receiverID,db=db)
     return dbResponse
