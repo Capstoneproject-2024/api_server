@@ -1,3 +1,5 @@
+from tokenize import group
+
 from gensim.models import fasttext
 import numpy as np
 from FileReader import *
@@ -16,6 +18,7 @@ class Matcher:
 
         self.keywords = {}              # { book_title: {info: [], review: []}} Caching the keywords for testing
         self.keywords_categorized = {}  # { Keyword_category: [book1, book2, ...], Keyword_category: [...] }
+        self.group_keyword = []         # TODO add group keywords
 
         self.set_keywords()
         print("SimMatcher.py: sim_matcher ready")
@@ -79,7 +82,6 @@ class Matcher:
             self.keywords[title][Keytype.INFO.name] = keywords
 
 # Similarity Functions ======================================================================================
-
     def _s2v_mean(self, sentence: str, voo='similar'):
         """
         Calculate vector of a single sentence using arithmetic mean
@@ -130,7 +132,6 @@ class Matcher:
         print(f"Word1: '{word1}', Word2: '{word2}', similarity: '{self._cosine_similarity(word1_vec, word2_vec)}'")
 
 # Data Getting Functions ======================================================================================
-
     def getBooks(self, book_path='BookInfo.txt'):
         """
         Read book information from publishers
@@ -158,15 +159,43 @@ class Matcher:
     def getBooks_API(self):
         self.books = self.reader.readInfoFromAPI()
 
-# Keyword Matching Functions ======================================================================================
+# Group Keyword Functions =========================================================================================
+    def initialize_group_words(self):
+        # TODO
+        pass
 
+    def get_group_keyword(self, keywords: list[str]):
+        """
+        Get keywords, return group word
+        :param keywords: POS PROCESS HAVE TO BE DONE!!!!
+        :return:
+        """
+        gk_pool = self.group_keyword
+
+        keyword_group_similarity = []
+
+        for g_key in gk_pool:
+            group_word_similarity = [g_key]
+            similarities = [self.sentence_similarity(g_key, key) for key in keywords]
+            group_word_similarity.append(np.average(similarities))
+            # -> group_word_similarity = [g_key, average_similarity]
+
+            keyword_group_similarity.append(group_word_similarity)
+
+        keyword_group_similarity.sort(key=lambda x: x[1], reverse=True)
+        group_words = [item[0] for item in keyword_group_similarity]        # get only title, not similarity
+        recommend_gw = group_words[0]
+        return recommend_gw
+
+
+# Keyword Matching Functions ======================================================================================
     def set_proportion(self, review_proportion: int):
         if 0 <= review_proportion <= 100:
             self.review_proportion = review_proportion/100
         else:
             print("WARNING: Proportion should be in 0~100")
 
-    def match_quot(self, title_in: str, quot_keywords: list[str], book_list: list):
+    def match_quot(self, title_in: str, quot_keywords: list, book_list: list, g_word = 'gw'):
         """
         :param title_in:
         :param quot_keywords:
@@ -177,23 +206,28 @@ class Matcher:
         title_sample = '샘플타이틀'
         keyword_sample = ['키워드1', '키워드2', '키워드3', '키워드4', '키워드5']
         book_list = ['책1', '책2', '책3', '책4', '책5']
+        group_word = g_word
 
         # TODO Get keywords of books using db api
-        book_keywords = [['책키11', '책키12', '책키13', '책키14', '책키15'],
-                         ['책키21', '책키22', '책키23', '책키24', '책키25'],
-                         ['책키31', '책키32', '책키33', '책키34', '책키35'],
-                         ['책키41', '책키42', '책키43', '책키44', '책키45'],
-                         ['책키51', '책키52', '책키53', '책키54', '책키55']]
+        book_keywords = [['제목1', ['책키11', '책키12', '책키13', '책키14', '책키15']],
+                         ['제목2', ['책키21', '책키22', '책키23', '책키24', '책키25']],
+                         ['제목3', ['책키31', '책키32', '책키33', '책키34', '책키35']],
+                         ['제목4', ['책키41', '책키42', '책키43', '책키44', '책키45']],
+                         ['제목5', ['책키51', '책키52', '책키53', '책키54', '책키55']]]
 
-
+        # 읽은 책이 1권 이하일 경우 해당 과정 생략
         book_keyword_flag = True
         if book_list in None or len(book_list) < 2:
             book_keyword_flag = False
 
         if book_keyword_flag:
-            temp_list = []
-            for keyword_list in book_keywords:
+            # Keyword 벡터로 변환한 리스트 만들기
+            book_vectors = []
+            for title, keywords in book_keywords:
+                keyword_vector = [self._s2v_mean(key) for key in keywords]
+                book_vectors.append([title, np.mean(keyword_vector, axis=0)])
 
+            # Book input 간 유사도 계산
 
 
 
@@ -396,7 +430,6 @@ class Matcher:
         pass
 
 # Keyword Data Saving Functions ======================================================================================
-
     def test_and_save_as_csv(self, keyword_path: str, encoding='utf-8'):
         dataframe = pd.read_csv(keyword_path, encoding=encoding)
         columns = ['title'] + [f'keyword{i}' for i in range(1, 6)] + [f'book{j}' for j in range(1, 6)]
