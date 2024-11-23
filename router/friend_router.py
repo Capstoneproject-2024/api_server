@@ -122,7 +122,8 @@ def create_friend_and_autoDelete(
         dbResponseDelete = deleteFriendRequest(
             senderID=follower.followeeID, receiverID=follower.followerID, db = db
         )
-
+        db.commit()
+        return dbResponseDelete
     except Exception as e :
          # 오류 발생 시 롤백
         print(f"오류 발생: {e}")
@@ -132,7 +133,6 @@ def create_friend_and_autoDelete(
             detail="친구 요청 삭제에 실패했습니다.",
         )
 
-    return dbResponseDelete
 
 
 @router.delete("/delete_friend_request")
