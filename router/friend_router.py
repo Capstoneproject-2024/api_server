@@ -127,8 +127,9 @@ def create_friend_and_autoDelete(
     dbResponseCreate = createFriend(follower=follower, db=db)
     dbResponseCreateReverse = createReverseFriend(
         follower=Follower(
-            followerID=follower.followeeID, followeeID=follower.followerID, db = db
+            followerID=follower.followeeID, followeeID=follower.followerID
         )
+        , db = db
     )
     dbResponseDelete = deleteFriendRequest(
         senderID=follower.followeeID, receiverID=follower.followerID, db = db
