@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from models import *
 from MySQLConnection import MySQLConnection, get_mysql_connection
+from router.user_router import get_user
 
 router = APIRouter(prefix="/friend")
 
@@ -30,7 +31,7 @@ def create_followerRequest(
 def get_users_by_email(email: str, db: MySQLConnection = Depends(get_mysql_connection)):
     db.start_transaction()
     try:
-        db.execute("SELECT * FROM userTable WHERE email LIKE '%"+email+"%'")
+        db.execute("SELECT * FROM userTable WHERE email LIKE '%" + email + "%'")
         users = db.fetchall()
         db.commit()
         return [
@@ -154,7 +155,7 @@ def create_friend_and_autoDelete(
 
 
 @router.delete("/delete_friend_request")
-async def delete_friend_request(
+def delete_friend_request(
     senderID: int, receiverID: int, db: MySQLConnection = Depends(get_mysql_connection)
 ):
     db.start_transaction()
@@ -171,3 +172,59 @@ async def delete_friend_request(
             detail="친구 요청 삭제에 실패했습니다.",
         )
     return dbResponse
+
+
+@router.get("/get_friends")
+def get_friends(userID: int, db: MySQLConnection = Depends(get_mysql_connection)):
+    db.start_transaction()
+    try:
+        db.execute("SELECT * FROM followerTable WHERE followerID = " + str(userID))
+        dbResult = db.fetchall()
+        db.commit()
+        friendsIDList = [friend[1] for friend in dbResult]
+        friendList = []
+        for id in friendsIDList:
+            friendList.append(get_user(id=id, db=db))
+        return friendList
+    except Exception as e:
+        # 오류 발생 시 롤백
+        print(f"오류 발생: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="친구 리스트 얻기 요청에 실패했습니다.",
+        )
+
+
+@router.get("/get_both_request")
+def get_both_request(userID : int, db: MySQLConnection = Depends(get_mysql_connection)):
+    db.start_transaction()
+    try:
+        db.execute(
+            f"""
+SELECT DISTINCT
+    CASE
+        WHEN senderID = {userID} THEN receiverID
+        ELSE senderID
+    END AS relatedID
+FROM followRequestTable
+WHERE senderID = {userID} OR receiverID = {userID};
+                   """
+        )
+        dbResponse = db.fetchall()
+        db.commit()
+        
+        friendsIDList = [friend[0] for friend in dbResponse]
+        friendList = []
+        for id in friendsIDList:
+            friendList.append(get_user(id=id, db=db))
+        return friendList
+    
+    except Exception as e:
+        # 오류 발생 시 롤백
+        print(f"오류 발생: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="친구 리스트 얻기 요청에 실패했습니다.",
+        )
