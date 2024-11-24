@@ -113,7 +113,10 @@ WHERE gm.groupID = {groupID};
         )
         members = db.fetchall()
         db.commit()
-        return members
+        return [
+            User(id=mem[0], nickname=mem[1], email=mem[2], uid=mem[3])
+            for mem in members
+        ]
     except Exception as e:
         # 오류 발생 시 롤백
         print(f"오류 발생: {e}")
@@ -162,3 +165,9 @@ def delete_member(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="그룹 멤버 삭제에 실패했습니다.",
         )
+
+
+# @router.get("/get_searched_friends")
+# def get_searched_friends(
+#     groupID : int, userID : int, db: MySQLConnection = Depends(get_mysql_connection)
+# )
