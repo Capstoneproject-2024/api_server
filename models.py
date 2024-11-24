@@ -27,6 +27,21 @@ class GetReview(BaseModel):
     reviewDate: datetime
 
 
+class ReviewWithBook(BaseModel):
+    id: int
+    userID: int
+    bookID: int
+    rating: float
+    review: str
+    quote: str
+    reviewDate: datetime
+    name: str
+    author: str
+    year: str
+    desc: str
+    image: str
+
+
 class PostReview(BaseModel):
     userID: int
     bookID: int

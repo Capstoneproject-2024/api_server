@@ -61,21 +61,39 @@ def review_visibility(
         )
 
 
-@router.get("/get_user_reviews")
-def get_user_reviews(userID: int, db: MySQLConnection = Depends(get_mysql_connection)):
+@router.get("/get_timeline_reviews")
+def get_timeline_reviews(
+    userID: int, db: MySQLConnection = Depends(get_mysql_connection)
+):
     try:
         db.execute(
             f"""
-SELECT *
-FROM reviewTable
-WHERE userID IN (
-    SELECT followeeID
-    FROM followerTable
-    WHERE followerID = {userID}
-    UNION
-    SELECT {userID}
+SELECT 
+    r.ID AS id,
+    r.userID AS userID,
+    r.bookID AS bookID,
+    r.rating AS rating,
+    r.review AS review,
+    r.quote AS quote,
+    r.reviewDate AS reviewDate,
+    b.name AS name,
+    b.author AS author,
+    b.year AS year,
+    b.description AS `desc`,
+    b.image AS image
+FROM reviewTable r
+JOIN bookTable b ON r.bookID = b.ID
+JOIN reviewVisibilityTable v ON r.ID = v.reviewID
+WHERE (
+    r.userID = {userID}
+    OR 
+    (r.userID IN (
+        SELECT followeeID
+        FROM followerTable
+        WHERE followerID = {userID}
+    ) AND v.visibilityLevel = 'public')
 )
-ORDER BY reviewDate DESC;
+ORDER BY r.reviewDate DESC;
 """
         )
         dbResult = db.fetchall()
