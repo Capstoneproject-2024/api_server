@@ -112,3 +112,8 @@ class Comment(BaseModel):
     userID: int
     comment: str
     commentDate : datetime
+
+
+class GroupMember(BaseModel):
+    groupID : int
+    memberID : int
