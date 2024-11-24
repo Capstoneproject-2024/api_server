@@ -1,9 +1,9 @@
 from urllib.parse import urlencode
-from fastapi import HTTPException
+from fastapi import APIRouter, HTTPException,Depends,status
 import httpx
 import requests
 import asyncio
-
+from MySQLConnection import MySQLConnection, get_mysql_connection
 
 delimiter = ';'
 
@@ -15,31 +15,35 @@ def makeURLRequest(query : str):
     encoded_query = urlencode({"query": query})
     return f"https://rahanaman.cien.or.kr/execute_query?{encoded_query}"
 
-def get_review_keywords_all():
+#================================== actual connection to DB ======================================
+
+def get_review_keywords_all(db:MySQLConnection = Depends(get_mysql_connection)):
     """
     r = {"result" : [[id, k1;k2;k3], [id, k1;k2;k3]]}
     r["result"]
     :return:
     """
-    query = (f"SELECT * "
-             f"FROM bookReviewKeywordTable")
-    url = makeURLRequest(query)
+    db.start_transaction()
+    try:
+        db.execute(f"SELECT * FROM bookReviewKeywordTable")
+        response = db.fetchall()
+        db.commit()
 
-    response = requests.get(url)
+        temp_list = []
+        for book_id, keyword_list in response[0]:
+            temp_list.append([book_id, keyword_list])
 
-    if response.status_code == 400:
-        raise HTTPException(status_code=400, detail="Bad Request: Invalid name")
-    result = response.json()
-    checkDBFailure(result)
+        return temp_list
 
-    review_keywords = []
+    except Exception as e:
+        # 오류 발생 시 롤백
+        print(f"오류 발생: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="사용자 생성에 실패했습니다."
+        )
 
-    for item in result["result"]:
-        book_id = item[0]
-        keywords = item[1].split(delimiter)
-        review_keywords.append([book_id, keywords])
-
-    return review_keywords
 
 def get_book_keywords_all():
     query = (f"SELECT * "
@@ -70,3 +74,5 @@ async def main():
 
 asyncio.run(main())
 """
+
+

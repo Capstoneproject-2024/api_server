@@ -2,10 +2,11 @@ from urllib.parse import urlencode
 from pydantic import BaseModel
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from RequestFormat import *
+from fastapi import APIRouter, HTTPException,Depends,status
 import json
-
 from pydantic import BaseModel
-
+from MySQLConnection import MySQLConnection, get_mysql_connection
 from Extractor import *
 from SimilarityMatcher import *
 
@@ -27,21 +28,6 @@ matcher = Matcher()
 
 # Request Body Pydantic Models ======================================================================================
 
-class ExtractBody(BaseModel):
-    review: str
-
-class MatchBody(BaseModel):
-    title: str
-    review: str
-
-class QuotBody(BaseModel):
-    #TODO - list name? or id?
-    title: str
-    quotation: str
-    book_list: list[str]
-
-# Request Body Pydantic Models ======================================================================================
-
 @app.post("/submit")
 # For testing
 async def submit_message(request: Request):
@@ -50,15 +36,16 @@ async def submit_message(request: Request):
     print("Received message:", message)  # 콘솔에 메시지 출력
     return {"message": f"Received: {message}"}
 
-
 @app.post("/match/review2all")
-async def match_similarity(request: MatchBody):
+async def match_similarity(request: MatchBody, db:MySQLConnection = Depends(get_mysql_connection)):
     """
     get title & review
     return matched book list (book)
     :param request:
     :return:
     """
+    db.start_transaction()
+
     title = request.title
     review = request.review
     extracted_keywords = extractor.extract_keyword_string(review, show_similarity=False)
@@ -84,11 +71,6 @@ async def extract_keyword(request: Request):
     #print(f"Extracted Keywords: {keywords}")
 
     return {"keywords": keywords}
-
-
-
-
-
 
 # DB CHECK PART =====================================================================================================
 
