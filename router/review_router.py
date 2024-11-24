@@ -99,7 +99,7 @@ ORDER BY r.reviewDate DESC;
         dbResult = db.fetchall()
         db.commit()
         return [
-            GetReview(
+            ReviewWithBook(
                 id=review[0],
                 userID=review[1],
                 bookID=review[2],
@@ -107,6 +107,11 @@ ORDER BY r.reviewDate DESC;
                 review=review[4],
                 quote=review[5],
                 reviewDate=review[6],
+                name=review[7],
+                author=review[8],
+                year=review[9],
+                desc=review[10],
+                image=review[11],
             )
             for review in dbResult
         ]
