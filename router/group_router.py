@@ -167,7 +167,42 @@ def delete_member(
         )
 
 
-# @router.get("/get_searched_friends")
-# def get_searched_friends(
-#     groupID : int, userID : int, db: MySQLConnection = Depends(get_mysql_connection)
-# )
+@router.get("/get_searched_nonMember_friends")
+def get_searched_nonMember_friends(
+    groupID: int,
+    userID: int,
+    email: str,
+    db: MySQLConnection = Depends(get_mysql_connection),
+):
+    db.start_transaction()
+    try:
+        db.execute(
+            f"""
+SELECT u.*
+FROM userTable u
+WHERE u.ID IN (
+    SELECT f.followeeID
+    FROM followerTable f
+    WHERE f.followerID = {userID}
+    AND f.followeeID NOT IN (
+        SELECT gm.memberID
+        FROM groupMemberTable gm
+        WHERE gm.groupID = {groupID}
+    )
+);
+"""
+        )
+        members = db.fetchall()
+        db.commit()
+        return [
+            User(id=mem[0], nickname=mem[1], email=mem[2], uid=mem[3])
+            for mem in members
+        ]
+    except Exception as e:
+        # 오류 발생 시 롤백
+        print(f"오류 발생: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="그룹 멤버 가져오는데 실패했습니다.",
+        )
