@@ -180,7 +180,8 @@ def get_searched_nonMember_friends(
             f"""
 SELECT u.*
 FROM userTable u
-WHERE u.ID IN (
+WHERE u.email LIKE '%{email}%'
+AND u.ID IN (
     SELECT f.followeeID
     FROM followerTable f
     WHERE f.followerID = {userID}
