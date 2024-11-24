@@ -97,3 +97,18 @@ class BookWihtoutDesc(BaseModel):
     year: str
     image: str
     ISBN: str
+
+
+# comment  관련
+class postComment(BaseModel):
+    reviewID : int
+    userID : int
+    comment : str
+
+
+class Comment(BaseModel):
+    commentID : int
+    reviewID: int
+    userID: int
+    comment: str
+    commentDate : datetime
