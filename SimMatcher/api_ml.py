@@ -6,9 +6,9 @@ from RequestFormat import *
 from fastapi import APIRouter, HTTPException,Depends,status
 import json
 from pydantic import BaseModel
-from MySQLConnection import MySQLConnection, get_mysql_connection
 from Extractor import *
 from SimilarityMatcher import *
+from api_db_connection import *
 
 # Type "uvicorn [file name]:app --reload" to start server
 #   -> ex) "uvicorn api_test:app --reload"
@@ -23,6 +23,8 @@ app.add_middleware(
     allow_headers=["*"],  # 모든 헤더 허용
 )
 
+#app.include_router(router)
+
 extractor = Extractor()
 matcher = Matcher()
 
@@ -36,14 +38,15 @@ async def submit_message(request: Request):
     print("Received message:", message)  # 콘솔에 메시지 출력
     return {"message": f"Received: {message}"}
 
+"""
 @app.post("/match/review2all")
 async def match_similarity(request: MatchBody, db:MySQLConnection = Depends(get_mysql_connection)):
-    """
+    ""
     get title & review
     return matched book list (book)
     :param request:
     :return:
-    """
+    ""
     db.start_transaction()
 
     title = request.title
@@ -53,13 +56,15 @@ async def match_similarity(request: MatchBody, db:MySQLConnection = Depends(get_
     #print(f"Title: {title}\nKeywords: {extracted_keywords}\nRecommend: {book_recommend}")
 
     return {"recommend": book_recommend}
+"""
 
 @app.post("/match/quot2all")
 async def match_quotation(request: QuotBody):
-
+    #TODO in progress
     title = request.title
     quot = request.quotation
     book_list = request.book_list
+
 
 
 @app.post("/extract")
@@ -72,14 +77,18 @@ async def extract_keyword(request: Request):
 
     return {"keywords": keywords}
 
+@app.get('/extractVocab')
+async def extract_vocab(keywords: str):
+    """
+    :param keywords: Should be formed 'k1;k2;k3;k4;k5'
+    :return: groupVocabulary
+    """
+    keywords = [key.strip() for key in keywords.split(';')]
+    group_vocab = matcher.get_group_vocab(keywords)
+
+    return{"groupVocabulary": group_vocab}
+
+
 # DB CHECK PART =====================================================================================================
 
-def makeURLRequest(query : str):
-    # DB SQL request
-    encoded_query = urlencode({"query": query})
-    return f"https://rahanaman.cien.or.kr/execute_query?{encoded_query}"
-
-def checkDBFailure(response: dict):
-    if response["result"] == "fail":
-        raise HTTPException(status_code=502, detail="DB result is fail")
 

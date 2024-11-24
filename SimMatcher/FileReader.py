@@ -58,7 +58,7 @@ class Filereader:
         """
         bookKeywordTable
             keyword: text
-        :return:
+        :return: List of review keyword in [ [title, keywords], [title, keywords] ]
         """
         rk = get_review_keywords_all()
         return rk

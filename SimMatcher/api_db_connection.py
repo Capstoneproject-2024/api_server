@@ -1,11 +1,14 @@
+from idlelib.query import Query
 from urllib.parse import urlencode
 from fastapi import APIRouter, HTTPException,Depends,status
-import httpx
 import requests
-import asyncio
 from MySQLConnection import MySQLConnection, get_mysql_connection
 
 delimiter = ';'
+
+router = APIRouter(
+    prefix= "/sim"
+)
 
 def checkDBFailure(response: dict):
     if response["result"] == "fail":
@@ -17,23 +20,102 @@ def makeURLRequest(query : str):
 
 #================================== actual connection to DB ======================================
 
-def get_review_keywords_all(db:MySQLConnection = Depends(get_mysql_connection)):
+
+def get_review_keywords_all():
     """
-    r = {"result" : [[id, k1;k2;k3], [id, k1;k2;k3]]}
-    r["result"]
+    input: [ [book_id, "key1;key2;key3;key4;key5" ]
+    output: [ [book_id, [k1, k2, ... ] ]
     :return:
     """
+    db = get_mysql_connection()
     db.start_transaction()
     try:
-        db.execute(f"SELECT * FROM bookReviewKeywordTable")
+        db.execute(f"SELECT * FROM bookKeywordTable")
         response = db.fetchall()
         db.commit()
 
-        temp_list = []
-        for book_id, keyword_list in response[0]:
-            temp_list.append([book_id, keyword_list])
+        book_keyword_list = []
 
-        return temp_list
+        for title, keyword_string in response:
+            key = [item.strip() for item in keyword_string.split(';')]
+            book_keyword = [title, key]
+            book_keyword_list.append(book_keyword)
+
+        db.close()
+        return book_keyword_list
+
+    except Exception as e:
+        # 오류 발생 시 롤백
+        print(f"오류 발생: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="get_review_keywords_all 오류 발생."
+        )
+
+def get_book_keywords_all():
+    db = get_mysql_connection()
+    db.start_transaction()
+
+    try:
+        db.execute(f"SELECT * FROM reviewKeywordTable")
+        response = db.fetchall()
+        db.commit()
+
+        review_keywords_list = []
+
+        for title, keyword_string in response:
+            key = [item.strip() for item in keyword_string.split(';')]
+            review_keyword = [title, key]
+            review_keywords_list.append(review_keyword)
+
+        db.close()
+        return review_keywords_list
+
+    except Exception as e:
+        # 오류 발생 시 롤백
+        print(f"오류 발생: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="get_review_keywords_all 오류 발생."
+        )
+
+def get_group_vocab(show_id = False):
+    db = get_mysql_connection()
+    db.start_transaction()
+    try:
+        db.execute(f"SELECT * FROM groupVocabularyTable")
+        response = db.fetchall()
+        db.commit()
+
+        vocab_list = []
+
+        for id, vocab in response:
+            vocab_list.append(vocab)
+
+        db.close()
+        return response
+
+    except Exception as e:
+        # 오류 발생 시 롤백
+        print(f"오류 발생: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="get_review_keywords_all 오류 발생."
+        )
+
+#"""
+@router.get('/testdb')
+def test_database(keyword: str,
+                  db:MySQLConnection = Depends(get_mysql_connection)):
+    db.start_transaction()
+    try:
+        db.execute(f"{keyword}")
+        response = db.fetchall()
+        db.commit()
+        return response
 
     except Exception as e:
         # 오류 발생 시 롤백
@@ -43,36 +125,6 @@ def get_review_keywords_all(db:MySQLConnection = Depends(get_mysql_connection)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="사용자 생성에 실패했습니다."
         )
-
-
-def get_book_keywords_all():
-    query = (f"SELECT * "
-             f"FROM bookKeywordTable")
-    url = makeURLRequest(query)
-
-    response = requests.get(url)
-
-    if response.status_code == 400:
-        raise HTTPException(status_code=400, detail="Bad Request: Invalid name")
-    result = response.json()
-    checkDBFailure(result)
-
-    book_keywords = []
-
-    for item in result["result"]:
-        book_id = item[0]
-        keywords = item[1].split(delimiter)
-        book_keywords.append([book_id, keywords])
-
-    return book_keywords
-
-"""
-async def main():
-    keywords = await get_book_keywords_all()
-    for key in keywords:
-        print(key)
-
-asyncio.run(main())
-"""
-
+#"""
+#================================== Testing API ======================================
 

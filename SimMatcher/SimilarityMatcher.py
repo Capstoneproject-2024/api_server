@@ -6,11 +6,13 @@ from FileReader import *
 from enum import IntEnum
 from datetime import datetime
 import math
+from api_db_connection import *
 
 class Matcher:
     def __init__(self, modelpath='models/cc.ko.300.bin.gz', use_model=True):
         self.books = []
         self.reviews = []
+
         if use_model:
             self.model = fasttext.load_facebook_vectors(modelpath)
         self.reader = Filereader()
@@ -162,12 +164,12 @@ class Matcher:
     def getBooks_API(self):
         self.books = self.reader.readInfoFromAPI()
 
-# Group Keyword Functions =========================================================================================
+# Group Vocab Functions =========================================================================================
     def initialize_group_words(self):
         # TODO
         pass
 
-    def get_group_keyword(self, keywords: list[str]):
+    def get_group_vocab(self, keywords: list[str]):
         """
         Get keywords, return group word
         :param keywords: POS PROCESS HAVE TO BE DONE!!!!
