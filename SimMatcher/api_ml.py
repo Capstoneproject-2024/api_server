@@ -84,7 +84,7 @@ async def extract_vocab(keywords: str):
     :return: groupVocabulary
     """
     keywords = [key.strip() for key in keywords.split(';')]
-    group_vocab = matcher.get_group_vocab(keywords)
+    group_vocab = matcher.match_group_vocab(keywords)
 
     return{"groupVocabulary": group_vocab}
 

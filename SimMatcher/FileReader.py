@@ -3,10 +3,12 @@ import re
 import json
 import pandas as pd
 from api_db_connection import *
+from MySQLConnection import MySQLConnection, get_mysql_connection
 
 class Filereader:
     def __init__(self):
         self.status = 0
+        self.db = get_mysql_connection()
 
     def readReviews(self, csvpath: str, encoding='utf-8', skip=1) -> list:
         reviews = []
@@ -54,18 +56,23 @@ class Filereader:
 
         return reviews_processed
 
+# Get Data From API ========================================================================================
     def readReviewFromAPI(self):
         """
         bookKeywordTable
             keyword: text
         :return: List of review keyword in [ [title, keywords], [title, keywords] ]
         """
-        rk = get_review_keywords_all()
+        rk = get_review_keywords_all(self.db)
         return rk
 
     def readInfoFromAPI(self):
-        bk = get_book_keywords_all()
+        bk = get_book_keywords_all(self.db)
         return bk
+
+    def get_group_vocab(self):
+        gv = get_group_vocab(self.db)
+        return gv
 
 
 
@@ -84,4 +91,6 @@ class Filereader:
 
         return reviews_processed
 
+    def exit(self):
+        self.db.close()
 

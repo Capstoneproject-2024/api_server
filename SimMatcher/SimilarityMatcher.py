@@ -1,12 +1,11 @@
 from tokenize import group
-
 from gensim.models import fasttext
 import numpy as np
 from FileReader import *
 from enum import IntEnum
 from datetime import datetime
 import math
-from api_db_connection import *
+
 
 class Matcher:
     def __init__(self, modelpath='models/cc.ko.300.bin.gz', use_model=True):
@@ -21,10 +20,9 @@ class Matcher:
 
         self.keywords = {}              # { book_title: {info: [], review: []}} Caching the keywords for testing
         self.keywords_categorized = {}  # { Keyword_category: [book1, book2, ...], Keyword_category: [...] }
-        self.group_keyword = []         # TODO add group keywords
+        self.group_vocab = []
 
-
-
+        self.initialize_group_vocab()
         self.set_keywords()
         print("SimMatcher.py: sim_matcher ready")
 
@@ -63,10 +61,10 @@ class Matcher:
         """
         #self.getBooks(book_path=book_keyword_path)
         # Change for select review file { Json / CSV }
-        self.getReviews_csv(review_path=review_keyword_path)
-        self.getBooks(book_path=book_keyword_path)
-        #self.getReviews_API()
-        #self.getBooks_API()
+        #self.getReviews_csv(review_path=review_keyword_path)
+        #self.getBooks(book_path=book_keyword_path)
+        self.getReviews_API()
+        self.getBooks_API()
 
         for book in self.books:
             self._add_keyword(book[0], book[1], Keytype.INFO)       # [0] = title, [1] = info
@@ -165,18 +163,17 @@ class Matcher:
         self.books = self.reader.readInfoFromAPI()
 
 # Group Vocab Functions =========================================================================================
-    def initialize_group_words(self):
-        # TODO
-        pass
+    def initialize_group_vocab(self):
+        gv = self.reader.get_group_vocab()
+        self.group_vocab = gv
 
-    def get_group_vocab(self, keywords: list[str]):
+    def match_group_vocab(self, keywords: list[str]) -> str:
         """
         Get keywords, return group word
         :param keywords: POS PROCESS HAVE TO BE DONE!!!!
         :return:
         """
-
-        gk_pool = self.group_keyword
+        gk_pool = self.group_vocab
 
         keyword_group_similarity = []
 
@@ -483,6 +480,20 @@ class Matcher:
         pass
 
 # Keyword Data Saving Functions ======================================================================================
+    def save_group_vocab(self, encoding='utf-8-sig'):
+        #TODO;
+        columns = ['book_id', 'group_vocab']
+        data = []
+
+        for book, keyword_list in self.books:
+            group_vocab = self.match_group_vocab(keyword_list)
+            data.append([book, group_vocab])
+
+
+        output_df = pd.DataFrame(data, columns=columns)
+        output_df.to_csv('results/group_vocab.csv', index=False, encoding='utf-8-sig')
+
+
     def test_and_save_as_csv(self, keyword_path: str, encoding='utf-8'):
         dataframe = pd.read_csv(keyword_path, encoding=encoding)
         columns = ['title'] + [f'keyword{i}' for i in range(1, 6)] + [f'book{j}' for j in range(1, 6)]
@@ -530,7 +541,7 @@ class Matcher:
 
     def save_satus_to_exit(self):
         #TODO
-        pass
+        self.reader.exit()
 
 # Others
 

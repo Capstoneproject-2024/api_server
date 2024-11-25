@@ -21,56 +21,53 @@ def makeURLRequest(query : str):
 #================================== actual connection to DB ======================================
 
 
-def get_review_keywords_all():
+def get_review_keywords_all(db: MySQLConnection):
     """
     input: [ [book_id, "key1;key2;key3;key4;key5" ]
     output: [ [book_id, [k1, k2, ... ] ]
     :return:
     """
-    db = get_mysql_connection()
     db.start_transaction()
+    try:
+        db.execute(f"SELECT * FROM bookReviewKeywordTable")
+        response = db.fetchall()
+        db.commit()
+
+        review_keyword_list = []
+
+        for title, keyword_string in response:
+            key = [item.strip() for item in keyword_string.split(';')]
+            review_keyword = [title, key]
+            review_keyword_list.append(review_keyword)
+
+        return review_keyword_list
+
+    except Exception as e:
+        # 오류 발생 시 롤백
+        print(f"오류 발생: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="get_review_keywords_all 오류 발생."
+        )
+
+
+def get_book_keywords_all(db: MySQLConnection):
+    db.start_transaction()
+
     try:
         db.execute(f"SELECT * FROM bookKeywordTable")
         response = db.fetchall()
         db.commit()
 
-        book_keyword_list = []
+        book_keywords_list = []
 
         for title, keyword_string in response:
             key = [item.strip() for item in keyword_string.split(';')]
             book_keyword = [title, key]
-            book_keyword_list.append(book_keyword)
+            book_keywords_list.append(book_keyword)
 
-        db.close()
-        return book_keyword_list
-
-    except Exception as e:
-        # 오류 발생 시 롤백
-        print(f"오류 발생: {e}")
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="get_review_keywords_all 오류 발생."
-        )
-
-def get_book_keywords_all():
-    db = get_mysql_connection()
-    db.start_transaction()
-
-    try:
-        db.execute(f"SELECT * FROM reviewKeywordTable")
-        response = db.fetchall()
-        db.commit()
-
-        review_keywords_list = []
-
-        for title, keyword_string in response:
-            key = [item.strip() for item in keyword_string.split(';')]
-            review_keyword = [title, key]
-            review_keywords_list.append(review_keyword)
-
-        db.close()
-        return review_keywords_list
+        return book_keywords_list
 
     except Exception as e:
         # 오류 발생 시 롤백
@@ -78,11 +75,11 @@ def get_book_keywords_all():
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="get_review_keywords_all 오류 발생."
+            detail="get_book_keywords_all 오류 발생."
         )
 
-def get_group_vocab(show_id = False):
-    db = get_mysql_connection()
+
+def get_group_vocab(db: MySQLConnection, show_id = False):
     db.start_transaction()
     try:
         db.execute(f"SELECT * FROM groupVocabularyTable")
@@ -94,8 +91,8 @@ def get_group_vocab(show_id = False):
         for id, vocab in response:
             vocab_list.append(vocab)
 
-        db.close()
-        return response
+        print(f"get_gv complete {vocab_list}")
+        return vocab_list
 
     except Exception as e:
         # 오류 발생 시 롤백
@@ -106,7 +103,8 @@ def get_group_vocab(show_id = False):
             detail="get_review_keywords_all 오류 발생."
         )
 
-#"""
+
+"""
 @router.get('/testdb')
 def test_database(keyword: str,
                   db:MySQLConnection = Depends(get_mysql_connection)):
@@ -125,6 +123,6 @@ def test_database(keyword: str,
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="사용자 생성에 실패했습니다."
         )
-#"""
+"""
 #================================== Testing API ======================================
 

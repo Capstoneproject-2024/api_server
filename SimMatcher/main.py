@@ -1,8 +1,8 @@
+import asyncio
 from Extractor import *
 from FileReader import *
 from SimilarityMatcher import *
 import traceback
-import json
 from pathlib import Path
 
 """
@@ -41,7 +41,7 @@ async def main():
     while True:
         print(
             "0: Exit\n"
-            "1: Match\n"
+            "1: Group-vocab save\n"
             "2: Set Review Proportion (0~100)\n"
             "3: Matcher\n"
             "4: Extractor (x)\n"
@@ -55,10 +55,11 @@ async def main():
         try:
             if user_input == "0":
                 extractor.save_status_to_exit()
+                matcher.save_satus_to_exit()
                 exit(0)
 
             elif user_input == "1" and use_model:
-                matcher.match_both_test()
+                matcher.save_group_vocab()
 
             elif user_input == "2":
                 proportion = input(
