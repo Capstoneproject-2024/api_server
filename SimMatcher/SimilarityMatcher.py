@@ -9,8 +9,10 @@ import math
 
 class Matcher:
     def __init__(self, modelpath='models/cc.ko.300.bin.gz', use_model=True):
+        # TODO 실제 배포 전 아래 3개의 리스트는 set keyword시 초기화 할 것 -> 현재 DATA -> CSV 저장을 위해 초기화하지 않음
         self.books = []
         self.reviews = []
+        self.vocabs = []
 
         if use_model:
             self.model = fasttext.load_facebook_vectors(modelpath)
@@ -18,7 +20,7 @@ class Matcher:
         self.review_proportion = 0.5    # Proportion of Review
         self.time_format = "%y%m%d-%H%M%S"
 
-        self.keywords = {}              # { book_title: {info: [], review: []}} Caching the keywords for testing
+        self.keywords = {}              # { book_title: {info: [], review: [], vocab: []}} Caching the keywords for testing
         self.keywords_categorized = {}  # { Keyword_category: [book1, book2, ...], Keyword_category: [...] }
         self.group_vocab = []
 
@@ -31,7 +33,8 @@ class Matcher:
         for title, keywords in self.keywords.items():
             print(f'Title: "{title}"\n'
                   f'Info Keywords  : {keywords[Keytype.INFO.name]}\n'
-                  f'Review Keywords: {keywords[Keytype.REVIEW.name]}\n')
+                  f'Review Keywords: {keywords[Keytype.REVIEW.name]}\n'
+                  f'Group Vocab    : {keywords[Keytype.VOCAB.name]}\n')
         print("------------------------------------------------------------")
 
     def print_all_keywords_json(self):
@@ -65,24 +68,34 @@ class Matcher:
         #self.getBooks(book_path=book_keyword_path)
         self.getReviews_API()
         self.getBooks_API()
+        self.getBookVocab_API()
 
         for book in self.books:
-            self._add_keyword(book[0], book[1], Keytype.INFO)       # [0] = title, [1] = info
+            self._add_keyword(book[0], book[1], Keytype.INFO)       # [0] = title, [1] = info (List[STR])
 
         for review in self.reviews:
-            self._add_keyword(review[0], review[1], Keytype.REVIEW)  # [0] = title, [1] = review keywords
+            self._add_keyword(review[0], review[1], Keytype.REVIEW)  # [0] = title, [1] = review keywords (List[str])
+
+        for vocab in self.vocabs:
+            self._add_keyword(vocab[0], vocab[1], Keytype.VOCAB)     # [0] = title, [1] = Vocab (STR)
 
         print("SimilarityMatcher.py: Keywords set")
 
-    def _add_keyword(self, title: str, keywords: list, key_type: int):
+    def _add_keyword(self, title: str, keywords, key_type: int):
         if title not in self.keywords:
             self.keywords[title] = {Keytype.INFO.name: [], Keytype.REVIEW.name: []}
 
+        # Review
         if key_type == Keytype.REVIEW and keywords not in self.keywords[title][Keytype.REVIEW.name]:
             self.keywords[title][Keytype.REVIEW.name].append(keywords)
 
+        # Book Info
         elif key_type == Keytype.INFO:
             self.keywords[title][Keytype.INFO.name] = keywords
+
+        # Group Vocab
+        elif key_type == Keytype.VOCAB:
+            self.keywords[title][Keytype.VOCAB.name] = keywords
 
 # Similarity Functions ======================================================================================
     def _s2v_mean(self, sentence: str, voo='similar'):
@@ -162,10 +175,14 @@ class Matcher:
     def getBooks_API(self):
         self.books = self.reader.readInfoFromAPI()
 
-# Group Vocab Functions =========================================================================================
+    def getBookVocab_API(self):
+        self.vocabs = self.reader.get_book_vocab()
+
     def initialize_group_vocab(self):
         gv = self.reader.get_group_vocab()
         self.group_vocab = gv
+
+# Group Vocab Functions =========================================================================================
 
     def match_group_vocab(self, keywords: list[str]) -> str:
         """
@@ -189,7 +206,6 @@ class Matcher:
         group_words = [item[0] for item in keyword_group_similarity]        # get only title, not similarity
         recommend_gw = group_words[0]
         return recommend_gw
-
 
 # Keyword Matching Functions ======================================================================================
     def set_proportion(self, review_proportion: int):
@@ -265,7 +281,6 @@ class Matcher:
         # Match
         recommendation = self.match_both(title_in, aggregated_keywords)
         return recommendation
-
 
     def match_q2q(self, title_in: str, quot_keywords: list, book_list: list, g_word = 'gw'):
         """
@@ -378,6 +393,25 @@ class Matcher:
         book_recommend = titles[:recommend_number]
         return book_recommend
 
+    def match_both_test(self):
+        r_proportion = self.review_proportion
+        i_proportion = 1 - self.review_proportion
+
+        print(f"Match test - review[{r_proportion}] + info[{i_proportion}]")
+
+        for i, review in enumerate(self.reviews):
+            print(f'{i}: {review}')
+        review_num = int(input('\nEnter review number: '))
+
+        while 0 <= review_num <= len(self.reviews):
+            review_sample = self.reviews[review_num]
+            print(f'Sample review: {review_sample}')
+
+            recommend = self.match_both(review_sample[0], review_sample[1])
+            print(f'Recommendation: {recommend}')
+            review_num = int(input('\nEnter review number: '))
+
+    # Do Not Use This
     def _match_both_error(self, title: str, keywords: list, recommend_number=5):
         """
         DO NOT USE THIS METHOD
@@ -428,24 +462,6 @@ class Matcher:
         book_recommend = titles[:recommend_number]
         return book_recommend
 
-    def match_both_test(self):
-        r_proportion = self.review_proportion
-        i_proportion = 1 - self.review_proportion
-
-        print(f"Match test - review[{r_proportion}] + info[{i_proportion}]")
-
-        for i, review in enumerate(self.reviews):
-            print(f'{i}: {review}')
-        review_num = int(input('\nEnter review number: '))
-
-        while 0 <= review_num <= len(self.reviews):
-            review_sample = self.reviews[review_num]
-            print(f'Sample review: {review_sample}')
-
-            recommend = self.match_both(review_sample[0], review_sample[1])
-            print(f'Recommendation: {recommend}')
-            review_num = int(input('\nEnter review number: '))
-
     # Do Not Use This
     def match_book2review(self, reviews, books):
         print("Match test")
@@ -481,10 +497,10 @@ class Matcher:
 
 # Keyword Data Saving Functions ======================================================================================
     def save_group_vocab(self, encoding='utf-8-sig'):
-        #TODO;
+        #TODO Group Vocab DB 연동을 위한 임시 함수. 배포 전 반드시 지운 후, self.books, self.reviews, self.vocab 초기화 할것
         columns = ['book_id', 'group_vocab']
         data = []
-
+    
         for book, keyword_list in self.books:
             group_vocab = self.match_group_vocab(keyword_list)
             data.append([book, group_vocab])
@@ -548,4 +564,4 @@ class Matcher:
 class Keytype(IntEnum):
     INFO = 0
     REVIEW = 1
-    G_WORD = 2
+    VOCAB = 2

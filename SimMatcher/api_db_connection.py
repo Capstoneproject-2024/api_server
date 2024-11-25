@@ -78,7 +78,6 @@ def get_book_keywords_all(db: MySQLConnection):
             detail="get_book_keywords_all 오류 발생."
         )
 
-
 def get_group_vocab(db: MySQLConnection, show_id = False):
     db.start_transaction()
     try:
@@ -91,7 +90,7 @@ def get_group_vocab(db: MySQLConnection, show_id = False):
         for id, vocab in response:
             vocab_list.append(vocab)
 
-        print(f"get_gv complete {vocab_list}")
+        #print(f"get_gv complete {vocab_list}")
         return vocab_list
 
     except Exception as e:
@@ -101,6 +100,23 @@ def get_group_vocab(db: MySQLConnection, show_id = False):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="get_review_keywords_all 오류 발생."
+        )
+
+def get_book_vocab(db: MySQLConnection):
+    db.start_transaction()
+    try:
+        db.execute(f"SELECT * FROM bookVocabularyTable")
+        response = db.fetchall()
+        db.commit()
+        return response
+
+    except Exception as e:
+        # 오류 발생 시 롤백
+        print(f"오류 발생: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="get_book_vocab 오류 발생."
         )
 
 

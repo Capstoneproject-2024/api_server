@@ -74,7 +74,9 @@ class Filereader:
         gv = get_group_vocab(self.db)
         return gv
 
-
+    def get_book_vocab(self):
+        bv = get_book_vocab(self.db)
+        return bv
 
     def readReviewFromJson(self, jsonpath: str, encoding='utf-8') -> list:
         reviews_processed = []
