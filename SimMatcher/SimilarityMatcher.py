@@ -1,11 +1,11 @@
 from tokenize import group
 from gensim.models import fasttext
 import numpy as np
-from FileReader import *
+from .FileReader import *
 from enum import IntEnum
 from datetime import datetime
 import math
-
+from typing import List
 
 class Matcher:
     def __init__(self, modelpath='models/cc.ko.300.bin.gz', use_model=False):
@@ -192,7 +192,7 @@ class Matcher:
 
 # Group Vocab Functions =========================================================================================
 
-    def match_group_vocab(self, keywords: list[str]) -> str:
+    def match_group_vocab(self, keywords: List[str]) -> str:
         """
         Get keywords, return group word
         :param keywords: POS PROCESS HAVE TO BE DONE!!!!

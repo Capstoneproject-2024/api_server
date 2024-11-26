@@ -4,7 +4,7 @@ import pandas as pd
 from keybert import KeyBERT
 from transformers import AutoModel, AutoTokenizer
 from sentence_transformers import SentenceTransformer
-from FileReader import *
+from .FileReader import *
 import json
 from konlpy.tag import Okt
 import re
@@ -23,8 +23,8 @@ class Extractor:
         # Stop words
         self.stopwords_path = stopwords_path
         self.stopwords = []
-        with open(self.stopwords_path, 'r', encoding='utf-8') as file:
-            self.stopwords = [line.strip() for line in file.readlines()]
+#        with open(self.stopwords_path, 'r', encoding='utf-8') as file:
+ #           self.stopwords = [line.strip() for line in file.readlines()]
 
         # csvpath = 'data/Reviews.csv'
         self.filereader = Filereader()
