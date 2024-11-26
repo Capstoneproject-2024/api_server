@@ -19,7 +19,9 @@ class Matcher:
         self.reader = Filereader()
         self.review_proportion = 0.5    # Proportion of Review
         self.time_format = "%y%m%d-%H%M%S"
-
+        self.vocab_weight = 1.5
+        
+        # NOTICE!: book_title -> book_id = 'int', book_title = 'string', DB 에서 무엇을 받아 오느냐에 따라 달라짐
         self.keywords = {}              # { book_title: {info: [], review: [], vocab: []}} Caching the keywords for testing
         # self.keywords_categorized = {}  # { Keyword_category: [book1, book2, ...], Keyword_category: [...] }
         self.group_vocab = []
@@ -28,13 +30,14 @@ class Matcher:
         self.set_keywords()
         print("SimMatcher.py: sim_matcher ready")
 
+# Print Functions ======================================================================================
     def print_all_keywords(self):
         print("------------------------------------------------------------")
         for title, keywords in self.keywords.items():
-            print(f'Title: "{title}"\n'
-                  f'Info Keywords  : {keywords[Keytype.INFO.name]}\n'
-                  f'Review Keywords: {keywords[Keytype.REVIEW.name]}\n'
-                  f'Group Vocab    : {keywords[Keytype.VOCAB.name]}\n')
+            print(f'Title: "{title}", {type(title)}\n'
+                  f'Info Keywords  : {keywords[Keytype.INFO.name]}, {Keytype.INFO.name}\n'
+                  f'Review Keywords: {keywords[Keytype.REVIEW.name]}, {Keytype.REVIEW.name}\n'
+                  f'Group Vocab    : {keywords[Keytype.VOCAB.name]}, {Keytype.VOCAB.name}\n')
         print("------------------------------------------------------------")
 
     def print_all_keywords_json(self):
@@ -46,6 +49,11 @@ class Matcher:
         file_name = "results/keywords_" + current_time + ".json"
         with open(file_name, mode="w", encoding="utf-8") as file:
             json.dump(self.keywords, file, ensure_ascii=False, indent=4)
+
+# Setter Functions ======================================================================================
+
+    def set_vocab_weight(self, weight):
+        self.weight = weight
 
     def set_keywords(self,
                      book_keyword_path='BookInfo.txt',
@@ -71,13 +79,13 @@ class Matcher:
         self.getBookVocab_API()
 
         for book in self.books:
-            self._add_keyword(book[0], book[1], Keytype.INFO)       # [0] = title, [1] = info (List[STR])
+            self._add_keyword(str(book[0]), book[1], Keytype.INFO)       # [0] = title, [1] = info (List[STR])
 
         for review in self.reviews:
-            self._add_keyword(review[0], review[1], Keytype.REVIEW)  # [0] = title, [1] = review keywords (List[str])
+            self._add_keyword(str(review[0]), review[1], Keytype.REVIEW)  # [0] = title, [1] = review keywords (List[str])
 
         for vocab in self.vocabs:
-            self._add_keyword(vocab[0], vocab[1], Keytype.VOCAB)     # [0] = title, [1] = Vocab (STR)
+            self._add_keyword(str(vocab[0]), vocab[1], Keytype.VOCAB)     # [0] = title, [1] = Vocab (STR)
 
         print("SimilarityMatcher.py: Keywords set")
 
@@ -214,26 +222,31 @@ class Matcher:
         else:
             print("WARNING: Proportion should be in 0~100")
 
-    def match_quot(self, title_in: str, quot_keywords: list, book_list: list, g_vocab ='gw'):
+    def match_quot(self, title_in: str, quot_keywords: list, book_list: list, vocab ='', only_quot=False):
         """
         Have to test the extraction of quotation
         Use [top-3 book keyword | top-3 quot_keyword]
+        :param only_quot: param to choose using past book list (False) or not (True)
+        :param vocab:
         :param title_in:
         :param quot_keywords:
         :param book_list:
         :return:
         """
-        title_sample = '샘플타이틀'
-        quot_keywords_sample = ['키워드1', '키워드2', '키워드3', '키워드4', '키워드5']
-        book_list = ['제목1', '제목2', '제목3', '제목4', '제목5']
-        group_word = g_vocab
+        quot_keywords_in = quot_keywords
 
         # TODO Get keywords of books using db api -> created via 'book_list' input
-        book_keywords = [['제목1', ['책키11', '책키12', '책키13', '책키14', '책키15']],
-                         ['제목2', ['책키21', '책키22', '책키23', '책키24', '책키25']],
-                         ['제목3', ['책키31', '책키32', '책키33', '책키34', '책키35']],
-                         ['제목4', ['책키41', '책키42', '책키43', '책키44', '책키45']],
-                         ['제목5', ['책키51', '책키52', '책키53', '책키54', '책키55']]]
+        # TODO 가정 : book_list에는 str형태로 읽은 책의 list가 들어온다.
+        #book_keywords = [['제목1', ['책키11', '책키12', '책키13', '책키14', '책키15']],
+        #                 ['제목2', ['책키21', '책키22', '책키23', '책키24', '책키25']],
+        #                 ['제목3', ['책키31', '책키32', '책키33', '책키34', '책키35']],
+        #                 ['제목4', ['책키41', '책키42', '책키43', '책키44', '책키45']],
+        #                 ['제목5', ['책키51', '책키52', '책키53', '책키54', '책키55']]]
+
+        book_keywords = []
+        for book in book_list:
+            book_keywords.append([book, self.keywords[book][Keytype.INFO.name]])
+
 
         # 읽은 책이 1권 이하일 경우 선정 과정 생략
         book_keyword_flag = True
@@ -241,7 +254,7 @@ class Matcher:
 
         # 책 0권 -> 에러로 판단
         if book_list in None or len(book_list) < 1:
-            print('Sim_Matcher: match-quot get null book list')
+            print('Sim_Matcher: match-quot get null book list, return None')
             return None
 
         # 책 선정 - 1 권
@@ -249,7 +262,7 @@ class Matcher:
             book_keyword_flag = False
 
         # 책 선정 - 여러 권인 경우
-        if book_keyword_flag:
+        if book_keyword_flag and not only_quot:
             # Keyword 벡터로 변환한 리스트 만들기 -> [title, average_vector] 의 리스트
             book_vectors = []
             for title, keywords in book_keywords:
@@ -275,19 +288,23 @@ class Matcher:
 
         # 두 가지 키워드 절반씩 합치기 (인용구, 책)
         aggregated_keywords = []
-        aggregated_keywords.extend(quot_keywords_sample[:math.ceil(len(quot_keywords_sample)/2)])
-        aggregated_keywords.extend(selected_book_keywords[:math.ceil(len(selected_book_keywords)/2)])
+        if only_quot:
+            aggregated_keywords.extend(quot_keywords_in)
+        else:
+            aggregated_keywords.extend(quot_keywords_in[:math.ceil(len(quot_keywords_in)/2)])
+            aggregated_keywords.extend(selected_book_keywords[:math.ceil(len(selected_book_keywords)/2)])
 
         # Match
-        recommendation = self.match_both(title_in, aggregated_keywords)
+        recommendation = self.match_both(title_in, aggregated_keywords, vocab=vocab)
         return recommendation
 
-    def match_q2q(self, title_in: str, quot_keywords: list, book_list: list, g_word = 'gw'):
+    def match_q2q(self, title_in: str, quot_keywords: list, book_list: list, vocab = 'gw'):
         """
         get Quotation, match with other Quotations only
         Process: 1. calculate average Sentence Vector of quotation
                  2. Compare with other quotations -> (n x n) full-compare for each quotation -> O(n^3)
                  3. Sort for each quotation -> can get recommendation for each quotation
+        :param vocab:
         :param title_in:
         :param quot_keywords:
         :param book_list:
@@ -297,8 +314,9 @@ class Matcher:
         # TODO
         pass
 
-    def match_both(self, title_in: str, keywords_in: list, recommend_number=5):
+    def match_both(self, title_in: str, keywords_in: list, vocab: str = '', recommend_number=5):
         """
+        :param vocab:
         :param title_in: title of book
         :param keywords_in: keywords list of book
         :param recommend_number: number of return recommendationS
@@ -317,8 +335,12 @@ class Matcher:
             #      f'Keyword in: {keywords_in}\n'
             #      f'Compare with {title}\n'
             #      f'keyword: {keywords}')
+
+            if title == title_in: continue                      # Skip if title == input_title
+
             info_keywords = keywords[Keytype.INFO.name]
             review_keywords = keywords[Keytype.REVIEW.name]     # Could be a multiple list
+            book_vocab = keywords[Keytype.VOCAB.name]
             sims_info = []
             sims_review = []    # 2 Dimensional List  CAUTION !!!
 
@@ -384,9 +406,16 @@ class Matcher:
                     #print(f"WARNING: Empty Dataset\n"
                      #     f"    input title:{title_in}, keywords:{keywords_in}"
                       #    f"    current  title: {title}")
-
+            
+            # TODO Group vocab 같으면 가중치 추가, 디폴트값 (무시) 를 지정해야함. 현재는 Null String
+            if vocab != '':
+                if book_vocab == vocab:
+                    similarity = similarity * self.vocab_weight
+                    
             book_similarity.append([title, similarity])
-
+        
+            
+        
         book_similarity.sort(key=lambda x: x[1], reverse=True)
         titles = [item[0] for item in book_similarity]      # get only title, not similarity
         # print(f"titles: {titles}\nbooks: {book_similarity}")
@@ -419,7 +448,6 @@ class Matcher:
         :param keywords: [keyword1, keyword2, ... ]
         :return:
         """
-        # TODO 복수개의 Review 처리 안되어있음
         r_proportion = self.review_proportion
         i_proportion = 1 - self.review_proportion
         book_similarity = []
@@ -504,7 +532,6 @@ class Matcher:
         for book, keyword_list in self.books:
             group_vocab = self.match_group_vocab(keyword_list)
             data.append([book, group_vocab])
-
 
         output_df = pd.DataFrame(data, columns=columns)
         output_df.to_csv('results/group_vocab.csv', index=False, encoding='utf-8-sig')

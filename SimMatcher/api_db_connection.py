@@ -6,9 +6,11 @@ from MySQLConnection import MySQLConnection, get_mysql_connection
 
 delimiter = ';'
 
+"""
 router = APIRouter(
     prefix= "/sim"
 )
+"""
 
 def checkDBFailure(response: dict):
     if response["result"] == "fail":
@@ -51,7 +53,6 @@ def get_review_keywords_all(db: MySQLConnection):
             detail="get_review_keywords_all 오류 발생."
         )
 
-
 def get_book_keywords_all(db: MySQLConnection):
     db.start_transaction()
 
@@ -63,7 +64,7 @@ def get_book_keywords_all(db: MySQLConnection):
         book_keywords_list = []
 
         for title, keyword_string in response:
-            key = [item.strip() for item in keyword_string.split(';')]
+            key = [item.strip() for item in keyword_string.split(delimiter)]
             book_keyword = [title, key]
             book_keywords_list.append(book_keyword)
 

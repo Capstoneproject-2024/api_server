@@ -10,6 +10,7 @@ class Filereader:
         self.status = 0
         self.db = get_mysql_connection()
 
+# Get Data From Local Files for Testing=======================================================================
     def readReviews(self, csvpath: str, encoding='utf-8', skip=1) -> list:
         reviews = []
         with open(csvpath, mode='r', encoding=encoding) as file:
@@ -56,13 +57,22 @@ class Filereader:
 
         return reviews_processed
 
+    def readReviewFromJson(self, jsonpath: str, encoding='utf-8') -> list:
+        reviews_processed = []
+        with open(jsonpath, 'r', encoding=encoding) as file:
+            data = json.load(file)
+            for book, reviews in data.items():
+                #print(f'book = {book} : {reviews}')
+                for keywords in reviews:
+                    keyword_list = []
+                    for keyword_set in keywords:
+                        #print(keyword_set)
+                        keyword_list.append(keyword_set[0])
+                    reviews_processed.append([book, keyword_list])
+        return reviews_processed
+
 # Get Data From API ========================================================================================
     def readReviewFromAPI(self):
-        """
-        bookKeywordTable
-            keyword: text
-        :return: List of review keyword in [ [title, keywords], [title, keywords] ]
-        """
         rk = get_review_keywords_all(self.db)
         return rk
 
@@ -78,20 +88,6 @@ class Filereader:
         bv = get_book_vocab(self.db)
         return bv
 
-    def readReviewFromJson(self, jsonpath: str, encoding='utf-8') -> list:
-        reviews_processed = []
-        with open(jsonpath, 'r', encoding=encoding) as file:
-            data = json.load(file)
-            for book, reviews in data.items():
-                #print(f'book = {book} : {reviews}')
-                for keywords in reviews:
-                    keyword_list = []
-                    for keyword_set in keywords:
-                        #print(keyword_set)
-                        keyword_list.append(keyword_set[0])
-                    reviews_processed.append([book, keyword_list])
-        return reviews_processed
-
+# Others =======================================================================================================
     def exit(self):
         self.db.close()
-

@@ -1,11 +1,6 @@
-from urllib.parse import urlencode
-from pydantic import BaseModel
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from RequestFormat import *
-from fastapi import APIRouter, HTTPException,Depends,status
-import json
-from pydantic import BaseModel
 from Extractor import *
 from SimilarityMatcher import *
 from api_db_connection import *
@@ -38,39 +33,38 @@ async def submit_message(request: Request):
     print("Received message:", message)  # 콘솔에 메시지 출력
     return {"message": f"Received: {message}"}
 
-"""
-@app.post("/match/review2all")
-async def match_similarity(request: MatchBody, db:MySQLConnection = Depends(get_mysql_connection)):
-    ""
+@app.post("/match/basic")
+async def match_basic(request: MatchBody):
+    """
     get title & review
     return matched book list (book)
     :param request:
     :return:
-    ""
-    db.start_transaction()
-
+    """
     title = request.title
     review = request.review
+    vocab = request.vocab
+
     extracted_keywords = extractor.extract_keyword_string(review, show_similarity=False)
-    book_recommend = matcher.match_both(title, extracted_keywords)
+    book_recommend = matcher.match_both(title, extracted_keywords, vocab=vocab)
     #print(f"Title: {title}\nKeywords: {extracted_keywords}\nRecommend: {book_recommend}")
 
     return {"recommend": book_recommend}
-"""
 
-@app.post("/match/quot2all")
+@app.post("/match/quotation")
 async def match_quotation(request: QuotBody):
-    #TODO in progress
     title = request.title
     quot = request.quotation
     book_list = request.book_list
+    vocab = request.vocab
 
+    quot_keyword = extractor.extract_keyword_string(quot,show_similarity=False)
 
+    matcher.match_quot(title, quot_keyword, book_list, vocab, only_quot=False)
 
 @app.post("/extract")
-async def extract_keyword(request: Request):
-    data = await request.json()
-    review = data.get("review")
+async def extract_keyword(request: ExtractBody):
+    review = request.review
     keywords = extractor.extract_keyword_string(review, show_similarity=False, pos=True)
     #print(f"Received review: {review}")
     #print(f"Extracted Keywords: {keywords}")
@@ -78,13 +72,13 @@ async def extract_keyword(request: Request):
     return {"keywords": keywords}
 
 @app.get('/extractVocab')
-async def extract_vocab(keywords: str):
+async def extract_vocab(keywords_string: str):
     """
-    :param keywords: Should be formed 'k1;k2;k3;k4;k5'
+    :param keywords_string: Should be formed 'k1;k2;k3;k4;k5'
     :return: groupVocabulary
     """
-    keywords = [key.strip() for key in keywords.split(';')]
-    group_vocab = matcher.match_group_vocab(keywords)
+    keywords_string = [key.strip() for key in keywords_string.split(';')]
+    group_vocab = matcher.match_group_vocab(keywords_string)
 
     return{"groupVocabulary": group_vocab}
 
