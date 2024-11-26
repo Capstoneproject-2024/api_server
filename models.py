@@ -121,9 +121,25 @@ class GroupMember(BaseModel):
 
 # Quote 관련
 class GetQuoteQuestionCandidate(BaseModel):
-    id : int
-    groupID : int
-    vocabularyID : int
-    question : str
+    id: int
+    groupID: int
+    vocabularyID: int
+    question: str
 
 
+class PostQuoteAnswer(BaseModel):
+    questionID: int
+    userID: int
+    bookID: int
+    quotation: str
+
+
+class GetQuoteAnswer(BaseModel):
+    questionID: int
+    userID: int
+    bookID: int
+    quotation: str
+    name: str
+    author: str
+    year: str
+    image: str
