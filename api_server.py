@@ -12,7 +12,7 @@ import router.friend_router as friend_router
 import router.group_router as group_router
 import router.review_router as review_router
 import router.comment_router as comment_router
-
+import router.quote_router as quote_router
 
 app = FastAPI(lifespan=lifespan)
 
@@ -22,6 +22,7 @@ app.include_router(friend_router.router)
 app.include_router(group_router.router)
 app.include_router(review_router.router)
 app.include_router(comment_router.router)
+app.include_router(quote_router.router)
 
 
 app.add_middleware(

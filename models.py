@@ -101,19 +101,29 @@ class BookWihtoutDesc(BaseModel):
 
 # comment  관련
 class postComment(BaseModel):
-    reviewID : int
-    userID : int
-    comment : str
-
-
-class Comment(BaseModel):
-    commentID : int
     reviewID: int
     userID: int
     comment: str
-    commentDate : datetime
+
+
+class Comment(BaseModel):
+    commentID: int
+    reviewID: int
+    userID: int
+    comment: str
+    commentDate: datetime
 
 
 class GroupMember(BaseModel):
+    groupID: int
+    memberID: int
+
+
+# Quote 관련
+class GetQuoteQuestionCandidate(BaseModel):
+    id : int
     groupID : int
-    memberID : int
+    vocabularyID : int
+    question : str
+
+
