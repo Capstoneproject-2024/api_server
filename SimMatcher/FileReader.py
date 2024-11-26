@@ -2,7 +2,7 @@ import csv
 import re
 import json
 import pandas as pd
-from api_db_connection import *
+from SimMatcher.api_db_connection import *
 from MySQLConnection import MySQLConnection, get_mysql_connection
 
 class Filereader:
@@ -88,7 +88,7 @@ class Filereader:
         bv = get_book_vocab(self.db)
         return bv
 
-    def get_book_name_by_id(self):
+    #def get_book_name_by_id(self):
 
 # Others =======================================================================================================
     def exit(self):

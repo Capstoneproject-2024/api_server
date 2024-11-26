@@ -16,6 +16,7 @@ class Matcher:
 
         if use_model:
             self.model = fasttext.load_facebook_vectors(modelpath)
+
         self.reader = Filereader()
         self.review_proportion = 0.5    # Proportion of Review
         self.time_format = "%y%m%d-%H%M%S"
@@ -51,6 +52,10 @@ class Matcher:
             json.dump(self.keywords, file, ensure_ascii=False, indent=4)
 
 # Setter Functions ======================================================================================
+    def initialize_temporary_lists(self):
+        self.books = []
+        self.reviews = []
+        self.vocabs = []
 
     def set_vocab_weight(self, weight):
         self.weight = weight
@@ -88,6 +93,7 @@ class Matcher:
             self._add_keyword(str(vocab[0]), vocab[1], Keytype.VOCAB)     # [0] = title, [1] = Vocab (STR)
 
         print("SimilarityMatcher.py: Keywords set")
+        self.initialize_temporary_lists()
 
     def _add_keyword(self, title: str, keywords, key_type: int):
         if title not in self.keywords:

@@ -1,4 +1,6 @@
 from fastapi import FastAPI, Request, HTTPException
+from pydantic.v1 import NoneStr
+
 from .RequestFormat import *
 from .Extractor import *
 from .SimilarityMatcher import *
@@ -23,8 +25,6 @@ router = APIRouter(
     prefix="/sim"
 )
 
-
-
 extractor = Extractor()
 matcher = Matcher()
 
@@ -33,10 +33,9 @@ matcher = Matcher()
 @router.post("/submit")
 # For testing
 async def submit_message(request: Request):
-    data = await request.json()
-    message = data.get("message")
-    print("Received message:", message)  # 콘솔에 메시지 출력
-    return {"message": f"Received: {message}"}
+    sample_str = 'hello'
+    print(f"Received message: {sample_str}")  # 콘솔에 메시지 출력
+    return {"message": f"Received: {sample_str}"}
 
 @router.post("/match/basic")
 async def match_basic(request: MatchBody):

@@ -4,14 +4,15 @@ import pandas as pd
 from keybert import KeyBERT
 from transformers import AutoModel, AutoTokenizer
 from sentence_transformers import SentenceTransformer
-from FileReader import *
+from SimMatcher.FileReader import *
 import json
-from konlpy.tag import Okt
+from konlpy.tag import Okt, Komoran
 import re
 
 
 class Extractor:
     def __init__(self, model_name="monologg/kobert", stopwords_path='stopword.txt'):
+        print(f'Extractor.py: loading extractor')
 
         self.model_name = model_name
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True)
@@ -23,8 +24,8 @@ class Extractor:
         # Stop words
         self.stopwords_path = stopwords_path
         self.stopwords = []
-        with open(self.stopwords_path, 'r', encoding='utf-8') as file:
-            self.stopwords = [line.strip() for line in file.readlines()]
+        #with open(self.stopwords_path, 'r', encoding='utf-8') as file:
+        #   self.stopwords = [line.strip() for line in file.readlines()]
 
         # csvpath = 'data/Reviews.csv'
         self.filereader = Filereader()
@@ -44,6 +45,7 @@ class Extractor:
 # Basic, Essential Functions ======================================================================================
 
     def extract_pos(self, text):
+        """
         okt = Okt()
 
         # 텍스트에서 특수문자 제거
@@ -65,6 +67,22 @@ class Extractor:
         # word_counts = Counter(keywords)                # 키워드 빈도 계산
         # top_keywords = word_counts.most_common(10)     # 빈도 높은 키워드 상위 10개 추출
         # return top_keywords
+        """
+        komoran = Komoran()
+
+        # 텍스트에서 특수문자 제거
+        text = re.sub(r'[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9\s]', '', text)
+
+        # 형태소 분석하여 명사, 형용사, 동사만 추출
+        words = komoran.pos(text)
+        keywords = [word for word, pos in words if
+                    pos in ['NNG', 'NNP', 'VV', 'VA']]  # NNG: 일반 명사, NNP: 고유 명사, VV: 동사, VA: 형용사
+
+        keywords = [word for word in keywords if len(word) > 1]  # 길이가 1인 단어 제거
+
+        # 정해진 품사로만 이루어진 문장 생성
+        refined_sentence = ' '.join(keywords)
+        return refined_sentence
 
     def extract_keyword_string(self, review: str, show_similarity=True, pos=True) -> list:
         if pos:
