@@ -1,13 +1,13 @@
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from RequestFormat import *
-from Extractor import *
-from SimilarityMatcher import *
-from api_db_connection import *
+from .RequestFormat import *
+from .Extractor import *
+from .SimilarityMatcher import *
+from .api_db_connection import *
 
 # Type "uvicorn [file name]:app --reload" to start server
 #   -> ex) "uvicorn api_test:app --reload"
 
+"""
 app = FastAPI()
 
 app.add_middleware(
@@ -17,15 +17,20 @@ app.add_middleware(
     allow_methods=["*"],  # 모든 HTTP 메서드 허용
     allow_headers=["*"],  # 모든 헤더 허용
 )
+"""
 
-#app.include_router(router)
+router = APIRouter(
+    prefix="/sim"
+)
+
+
 
 extractor = Extractor()
 matcher = Matcher()
 
 # Request Body Pydantic Models ======================================================================================
 
-@app.post("/submit")
+@router.post("/submit")
 # For testing
 async def submit_message(request: Request):
     data = await request.json()
@@ -33,7 +38,7 @@ async def submit_message(request: Request):
     print("Received message:", message)  # 콘솔에 메시지 출력
     return {"message": f"Received: {message}"}
 
-@app.post("/match/basic")
+@router.post("/match/basic")
 async def match_basic(request: MatchBody):
     """
     get title & review
@@ -51,7 +56,7 @@ async def match_basic(request: MatchBody):
 
     return {"recommend": book_recommend}
 
-@app.post("/match/quotation")
+@router.post("/match/quotation")
 async def match_quotation(request: QuotBody):
     title = request.title
     quot = request.quotation
@@ -62,7 +67,7 @@ async def match_quotation(request: QuotBody):
 
     matcher.match_quot(title, quot_keyword, book_list, vocab, only_quot=False)
 
-@app.post("/extract")
+@router.post("/extract")
 async def extract_keyword(request: ExtractBody):
     review = request.review
     keywords = extractor.extract_keyword_string(review, show_similarity=False, pos=True)
@@ -71,7 +76,7 @@ async def extract_keyword(request: ExtractBody):
 
     return {"keywords": keywords}
 
-@app.get('/extractVocab')
+@router.get('/extractVocab')
 async def extract_vocab(keywords_string: str):
     """
     :param keywords_string: Should be formed 'k1;k2;k3;k4;k5'
