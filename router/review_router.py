@@ -149,16 +149,19 @@ FROM reviewTable r
 JOIN bookTable b ON r.bookID = b.ID
 JOIN reviewVisibilityTable v ON r.ID = v.reviewID
 WHERE (
-    (r.userID IN (
-        SELECT memberID
-        FROM groupMemberTable
-        WHERE groupID = {groupID}
-    ) AND v.visibilityLevel = 'public')
+    (
+        r.userID IN (
+            SELECT gm.memberID
+            FROM groupMemberTable gm
+            JOIN followerTable f ON gm.memberID = f.followeeID
+            WHERE gm.groupID = {groupID} AND f.followerID = {userID}
+        ) 
+        AND v.visibilityLevel = 'public'
+    )
     OR 
     (r.userID = {userID})
 )
 ORDER BY r.reviewDate DESC;
-
 """
         )
         dbResult = db.fetchall()
