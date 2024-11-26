@@ -21,7 +21,7 @@ class Matcher:
         self.time_format = "%y%m%d-%H%M%S"
 
         self.keywords = {}              # { book_title: {info: [], review: [], vocab: []}} Caching the keywords for testing
-        self.keywords_categorized = {}  # { Keyword_category: [book1, book2, ...], Keyword_category: [...] }
+        # self.keywords_categorized = {}  # { Keyword_category: [book1, book2, ...], Keyword_category: [...] }
         self.group_vocab = []
 
         self.initialize_group_vocab()
@@ -562,6 +562,7 @@ class Matcher:
 # Others
 
 class Keytype(IntEnum):
+    # Enum for use keyword dictionary self.keywords
     INFO = 0
     REVIEW = 1
     VOCAB = 2

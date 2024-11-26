@@ -90,7 +90,6 @@ class Filereader:
                         #print(keyword_set)
                         keyword_list.append(keyword_set[0])
                     reviews_processed.append([book, keyword_list])
-
         return reviews_processed
 
     def exit(self):
