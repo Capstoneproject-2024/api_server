@@ -5,8 +5,10 @@ from MySQLConnection import MySQLConnection, get_mysql_connection
 router = APIRouter(prefix="/quote")
 
 
-@router.get("/get_present_quation")
-def get_members(groupID: int, db: MySQLConnection = Depends(get_mysql_connection)):
+@router.get("/get_present_question")
+def get_present_question(
+    groupID: int, db: MySQLConnection = Depends(get_mysql_connection)
+):
     db.start_transaction()
     try:
         db.execute(
