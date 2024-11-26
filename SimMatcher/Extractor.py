@@ -4,15 +4,14 @@ import pandas as pd
 from keybert import KeyBERT
 from transformers import AutoModel, AutoTokenizer
 from sentence_transformers import SentenceTransformer
-from SimMatcher.FileReader import *
+from FileReader import *
 import json
-from konlpy.tag import Okt, Komoran
+from konlpy.tag import Okt
 import re
 
 
 class Extractor:
     def __init__(self, model_name="monologg/kobert", stopwords_path='stopword.txt'):
-        print(f'Extractor.py: loading extractor')
 
         self.model_name = model_name
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True)
@@ -65,6 +64,7 @@ class Extractor:
 
         # word_counts = Counter(keywords)                # 키워드 빈도 계산
         # top_keywords = word_counts.most_common(10)     # 빈도 높은 키워드 상위 10개 추출
+        # return top_keywords
 
     def extract_keyword_string(self, review: str, show_similarity=True, pos=True) -> list:
         if pos:
