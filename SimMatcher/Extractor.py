@@ -2,15 +2,12 @@ import time
 from datetime import datetime
 import pandas as pd
 from keybert import KeyBERT
-from sympy import false
 from transformers import AutoModel, AutoTokenizer
 from sentence_transformers import SentenceTransformer
 from FileReader import *
 import json
 from konlpy.tag import Okt
-from collections import Counter
 import re
-#from models.test import extract_pos
 
 
 class Extractor:

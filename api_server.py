@@ -8,7 +8,8 @@ import router.user_router as user_router
 import router.book_router as book_router
 import router.friend_router as friend_router
 import router.group_router as group_router
-import SimMatcher.api_db_connection as sim_tester
+#import SimMatcher.api_db_connection as sim_tester
+import SimMatcher.api_ml as sim_matcher
 
 app = FastAPI(lifespan=lifespan)
 
@@ -16,7 +17,7 @@ app.include_router(user_router.router)
 app.include_router(book_router.router)
 app.include_router(friend_router.router)
 app.include_router(group_router.router)
-app.include_router(sim_tester.router)
+app.include_router(sim_matcher.router)
 
 app.add_middleware(
     CORSMiddleware,

@@ -22,7 +22,6 @@ def makeURLRequest(query : str):
 
 #================================== actual connection to DB ======================================
 
-
 def get_review_keywords_all(db: MySQLConnection):
     """
     input: [ [book_id, "key1;key2;key3;key4;key5" ]
@@ -120,6 +119,22 @@ def get_book_vocab(db: MySQLConnection):
             detail="get_book_vocab 오류 발생."
         )
 
+def get_book_title(db: MySQLConnection, id: str):
+    db.start_transaction()
+    try:
+        db.execute(f"SELECT name FROM bookTable WHERE ID={id}")
+        response = db.fetchall()
+        db.commit()
+        return response[0][0]
+
+    except Exception as e:
+        # 오류 발생 시 롤백
+        print(f"오류 발생: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="get_book_title 오류 발생."
+        )
 
 """
 @router.get('/testdb')

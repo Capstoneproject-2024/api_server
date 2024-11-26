@@ -88,6 +88,8 @@ class Filereader:
         bv = get_book_vocab(self.db)
         return bv
 
+    def get_book_name_by_id(self):
+
 # Others =======================================================================================================
     def exit(self):
         self.db.close()
