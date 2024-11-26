@@ -8,7 +8,7 @@ import math
 
 
 class Matcher:
-    def __init__(self, modelpath='models/cc.ko.300.bin.gz', use_model=True):
+    def __init__(self, modelpath='models/cc.ko.300.bin.gz', use_model=False):
         # TODO 실제 배포 전 아래 3개의 리스트는 set keyword시 초기화 할 것 -> 현재 DATA -> CSV 저장을 위해 초기화하지 않음
         self.books = []
         self.reviews = []
