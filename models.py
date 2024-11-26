@@ -120,11 +120,12 @@ class GroupMember(BaseModel):
 
 
 # Quote 관련
-class GetQuoteQuestionCandidate(BaseModel):
+class GetQuestion(BaseModel):
     id: int
     groupID: int
     vocabularyID: int
     question: str
+    date: datetime
 
 
 class PostQuoteAnswer(BaseModel):
@@ -139,6 +140,7 @@ class GetQuoteAnswer(BaseModel):
     userID: int
     bookID: int
     quotation: str
+    date: datetime
     name: str
     author: str
     year: str

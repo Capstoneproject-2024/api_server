@@ -197,7 +197,7 @@ def get_friends(userID: int, db: MySQLConnection = Depends(get_mysql_connection)
 
 
 @router.get("/get_both_request")
-def get_both_request(userID : int, db: MySQLConnection = Depends(get_mysql_connection)):
+def get_both_request(userID: int, db: MySQLConnection = Depends(get_mysql_connection)):
     db.start_transaction()
     try:
         db.execute(
@@ -213,13 +213,13 @@ WHERE senderID = {userID} OR receiverID = {userID};
         )
         dbResponse = db.fetchall()
         db.commit()
-        
+
         friendsIDList = [friend[0] for friend in dbResponse]
         friendList = []
         for id in friendsIDList:
             friendList.append(get_user(id=id, db=db))
         return friendList
-    
+
     except Exception as e:
         # 오류 발생 시 롤백
         print(f"오류 발생: {e}")

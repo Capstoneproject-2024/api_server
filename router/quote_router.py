@@ -15,16 +15,51 @@ def get_present_question(
             f"""
 SELECT *
 FROM groupQuestionTable
-WHERE groupID = {groupID};
+WHERE groupID = {groupID}
+ORDER BY date DESC;
 """
         )
         result = db.fetchall()
         db.commit()
-        return GetQuoteQuestionCandidate(
+        return GetQuestion(
             id=result[0][0],
             groupID=result[0][1],
             vocabularyID=result[0][2],
             question=result[0][3],
+            date=result[0][4],
+        )
+    except Exception as e:
+        # 오류 발생 시 롤백
+        print(f"오류 발생: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="현 인용 질문 가져오는데 실패했습니다.",
+        )
+
+
+@router.get("/get_past_question")
+def get_past_question(
+    groupID: int, db: MySQLConnection = Depends(get_mysql_connection)
+):
+    db.start_transaction()
+    try:
+        db.execute(
+            f"""
+SELECT *
+FROM groupQuestionTable
+WHERE groupID = {groupID}
+ORDER BY date DESC;
+"""
+        )
+        result = db.fetchall()
+        db.commit()
+        return GetQuestion(
+            id=result[1][0],
+            groupID=result[1][1],
+            vocabularyID=result[1][2],
+            question=result[1][3],
+            date=result[1][4],
         )
     except Exception as e:
         # 오류 발생 시 롤백
@@ -70,6 +105,7 @@ SELECT
     q.userID,
     q.bookID,
     q.quotation,
+    q.date,
     b.name,
     b.author,
     b.year,
@@ -84,7 +120,8 @@ WHERE q.questionID = {questionID}
           WHERE f.followerID = {userID}
       )
       OR q.userID = {userID}
-  );
+  )
+ORDER BY q.date DESC;
 
 """
         )
@@ -97,10 +134,11 @@ WHERE q.questionID = {questionID}
                 userID=answer[1],
                 bookID=answer[2],
                 quotation=answer[3],
-                name=answer[4],
-                author=answer[5],
-                year=answer[6],
-                image=answer[7],
+                date=answer[4],
+                name=answer[5],
+                author=answer[6],
+                year=answer[7],
+                image=answer[8],
             )
             for answer in dbResult
         ]
