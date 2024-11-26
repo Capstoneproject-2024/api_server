@@ -8,7 +8,7 @@ delimiter = ';'
 
 """
 router = APIRouter(
-    prefix= "/sim"
+    prefix= "/simtest"
 )
 """
 
