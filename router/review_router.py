@@ -123,3 +123,68 @@ ORDER BY r.reviewDate DESC;
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="사용자의 리뷰 리스트 얻기 요청에 실패했습니다.",
         )
+
+
+@router.get("/get_group_timeline_reviews")
+def get_group_timeline_reviews(
+    userID: int, groupID: int, db: MySQLConnection = Depends(get_mysql_connection)
+):
+    try:
+        db.execute(
+            f"""
+SELECT DISTINCT
+    r.ID AS id,
+    r.userID AS userID,
+    r.bookID AS bookID,
+    r.rating AS rating,
+    r.review AS review,
+    r.quote AS quote,
+    r.reviewDate AS reviewDate,
+    b.name AS name,
+    b.author AS author,
+    b.year AS year,
+    b.description AS `desc`,
+    b.image AS image
+FROM reviewTable r
+JOIN bookTable b ON r.bookID = b.ID
+JOIN reviewVisibilityTable v ON r.ID = v.reviewID
+WHERE (
+    (r.userID IN (
+        SELECT memberID
+        FROM groupMemberTable
+        WHERE groupID = {groupID}
+    ) AND v.visibilityLevel = 'public')
+    OR 
+    (r.userID = {userID})
+)
+ORDER BY r.reviewDate DESC;
+
+"""
+        )
+        dbResult = db.fetchall()
+        db.commit()
+        return [
+            ReviewWithBook(
+                id=review[0],
+                userID=review[1],
+                bookID=review[2],
+                rating=review[3],
+                review=review[4],
+                quote=review[5],
+                reviewDate=review[6],
+                name=review[7],
+                author=review[8],
+                year=review[9],
+                desc=review[10],
+                image=review[11],
+            )
+            for review in dbResult
+        ]
+    except Exception as e:
+        # 오류 발생 시 롤백
+        print(f"오류 발생: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="사용자의 그룹 리뷰 리스트 얻기 요청에 실패했습니다.",
+        )
