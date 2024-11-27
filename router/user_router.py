@@ -61,7 +61,7 @@ def get_user(id: int, db: MySQLConnection = Depends(get_mysql_connection)):
     
 
 @router.post("/update_user")
-def update_user(id:str,nickname : str,db: MySQLConnection = Depends(get_mysql_connection)):
+def update_user(id:int,nickname : str,db: MySQLConnection = Depends(get_mysql_connection)):
     db.start_transaction()
     try:
         db.execute(
@@ -75,7 +75,7 @@ def update_user(id:str,nickname : str,db: MySQLConnection = Depends(get_mysql_co
         )
         db.fetchall()
         db.commit()
-        db.execute("SELECT * FROM userTable WHERE ID = %s", (id,))
+        db.execute("SELECT * FROM userTable WHERE ID = %s", (id))
         new_user = db.fetchall()
         db.commit()
         return User(
