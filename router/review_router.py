@@ -126,8 +126,8 @@ def get_timeline_reviews(
 ):
     try:
         db.execute(
-            f"""
-SELECT DISTINCT
+                        f"""
+SELECT 
     r.ID AS id,
     r.userID AS userID,
     r.bookID AS bookID,
@@ -143,10 +143,16 @@ SELECT DISTINCT
 FROM reviewTable r
 JOIN bookTable b ON r.bookID = b.ID
 JOIN reviewVisibilityTable v ON r.ID = v.reviewID
-WHERE r.userID = {userID}
+WHERE (
+    r.userID = {userID}
+    OR 
+    (r.userID IN (
+        SELECT followeeID
+        FROM followerTable
+        WHERE followerID = {userID}
+    ) AND v.visibilityLevel = 'public')
+)
 ORDER BY r.reviewDate DESC;
-
-
 """
         )
         dbResult = db.fetchall()
