@@ -66,10 +66,27 @@ def get_my_review(
 ):
     try:
         db.execute(
-            f"""
-            Select *
-            from reviewTable
-            where userID = {userID}
+                        f"""
+SELECT DISTINCT
+    r.ID AS id,
+    r.userID AS userID,
+    r.bookID AS bookID,
+    r.rating AS rating,
+    r.review AS review,
+    r.quote AS quote,
+    r.reviewDate AS reviewDate,
+    b.name AS name,
+    b.author AS author,
+    b.year AS year,
+    b.description AS `desc`,
+    b.image AS image
+FROM reviewTable r
+JOIN bookTable b ON r.bookID = b.ID
+JOIN reviewVisibilityTable v ON r.ID = v.reviewID
+WHERE r.userID = {userID}
+ORDER BY r.reviewDate DESC;
+
+
 """
         )
         dbResult = db.fetchall()
