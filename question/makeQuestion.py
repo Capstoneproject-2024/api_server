@@ -2,10 +2,8 @@ import re
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
 import os
-import asyncio
 
 from question.const import *
-from question.testEX import *
 from question.utils import *
 
 load_dotenv()

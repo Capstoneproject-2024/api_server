@@ -111,5 +111,5 @@ INSERT INTO groupQuestionTable (groupID, vocabularyID, question) VALUES ({groupI
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="사용자 생성에 실패했습니다.",
+            detail="인용 질문 생성 및 저장에 실패했습니다.",
         )
