@@ -60,7 +60,7 @@ def review_visibility(
             status_code=status.HTTP_400_BAD_REQUEST, detail="리뷰 생성에 실패했습니다."
         )
 
-@router.get("get_my_review")
+@router.get("/get_my_review")
 def get_my_review(
     userID:int,  db = Depends(get_mysql_connection)
 ):
