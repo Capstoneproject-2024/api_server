@@ -75,7 +75,7 @@ def update_user(id:str,nickname : str,db: MySQLConnection = Depends(get_mysql_co
         )
         db.fetchall()
         db.commit()
-        db.execute("SELECT * FROM userTable WHERE ID = %s", (id))
+        db.execute("SELECT * FROM userTable WHERE ID = %s", (id,))
         new_user = db.fetchall()
         db.commit()
         return User(
