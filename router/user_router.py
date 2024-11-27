@@ -65,13 +65,13 @@ def update_user(id:str,nickname : str,db: MySQLConnection = Depends(get_mysql_co
     db.start_transaction()
     try:
         db.execute(
-            f"""
+            """
             UPDATE userTable
             SET 
-            nickname = "{nickname}"
-            
-            WHERE ID = {id}
-            """
+                nickname = %s
+            WHERE ID = %s
+            """,
+            (str(nickname), str(id))  # 모든 매개변수를 명시적으로 문자열로 변환
         )
         db.fetchall()
         db.commit()
