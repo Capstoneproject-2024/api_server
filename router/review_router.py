@@ -60,6 +60,48 @@ def review_visibility(
             status_code=status.HTTP_400_BAD_REQUEST, detail="리뷰 생성에 실패했습니다."
         )
 
+@router.get("get_my_review")
+def get_my_review(
+    userID:int,  db = Depends(get_mysql_connection)
+):
+    try:
+        db.execute(
+            f"""
+            Select *
+            from reviewTable
+            where userID = {userID}
+"""
+        )
+        dbResult = db.fetchall()
+        db.commit()
+        return [
+            ReviewWithBook(
+                id=review[0],
+                userID=review[1],
+                bookID=review[2],
+                rating=review[3],
+                review=review[4],
+                quote=review[5],
+                reviewDate=review[6],
+                name=review[7],
+                author=review[8],
+                year=review[9],
+                desc=review[10],
+                image=review[11],
+            )
+            for review in dbResult
+        ]
+    except Exception as e:
+        # 오류 발생 시 롤백
+        print(f"오류 발생: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="사용자의 리뷰 리스트 얻기 요청에 실패했습니다.",
+        )
+
+    
+
 
 @router.get("/get_timeline_reviews")
 def get_timeline_reviews(
