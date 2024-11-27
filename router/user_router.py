@@ -68,7 +68,7 @@ def update_user(id:str,nickname : str,db: MySQLConnection = Depends(get_mysql_co
             f"""
             UPDATE userTable
             SET 
-            nickname = {nickname}
+            nickname = '{nickname}'
             
             WHERE ID = {id}
             """
