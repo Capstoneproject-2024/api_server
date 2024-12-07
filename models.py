@@ -1,5 +1,8 @@
+from typing import Literal, Optional
 from pydantic import BaseModel
 from datetime import datetime
+
+# uvicorn api_server:app --host 0.0.0.0 --port 8000 --reload
 
 
 # friend 관련 모델
@@ -15,7 +18,7 @@ class Follower(BaseModel):
 
 # review 관련 모델
 class GetReview(BaseModel):
-    ID: int
+    id: int
     userID: int
     bookID: int
     rating: float
@@ -24,12 +27,32 @@ class GetReview(BaseModel):
     reviewDate: datetime
 
 
+class ReviewWithBook(BaseModel):
+    id: int
+    userID: int
+    bookID: int
+    rating: float
+    review: str
+    quote: str
+    reviewDate: datetime
+    name: str
+    author: str
+    year: str
+    desc: str
+    image: str
+
+
 class PostReview(BaseModel):
     userID: int
     bookID: int
     rating: float
     review: str
     quote: str
+
+
+class ReviewVisibility(BaseModel):
+    reviewID: int
+    visibilityLevel: Optional[Literal["public", "private"]] = "public"
 
 
 # Group 관련 모델
@@ -74,3 +97,51 @@ class BookWihtoutDesc(BaseModel):
     year: str
     image: str
     ISBN: str
+
+
+# comment  관련
+class postComment(BaseModel):
+    reviewID: int
+    userID: int
+    comment: str
+
+
+class Comment(BaseModel):
+    commentID: int
+    reviewID: int
+    userID: int
+    comment: str
+    commentDate: datetime
+
+
+class GroupMember(BaseModel):
+    groupID: int
+    memberID: int
+
+
+# Quote 관련
+class GetQuestion(BaseModel):
+    id: int
+    groupID: int
+    vocabularyID: int
+    question: str
+    date: datetime
+
+
+class PostQuoteAnswer(BaseModel):
+    questionID: int
+    userID: int
+    bookID: int
+    quotation: str
+
+
+class GetQuoteAnswer(BaseModel):
+    questionID: int
+    userID: int
+    bookID: int
+    quotation: str
+    date: datetime
+    name: str
+    author: str
+    year: str
+    image: str
