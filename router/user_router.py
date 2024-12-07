@@ -58,6 +58,45 @@ def get_user(id: int, db: MySQLConnection = Depends(get_mysql_connection)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="존재하지 않는 사용자입니다.",
         )
+    
+class UpdateUserRequest(BaseModel):
+    id: int
+    nickname: str
+@router.post("/update_user")
+def update_user(user_request: UpdateUserRequest,db: MySQLConnection = Depends(get_mysql_connection)):
+    db.start_transaction()
+    try:
+        db.execute(
+            """
+            UPDATE userTable
+            SET 
+                nickname = %s
+            WHERE ID = %s
+            """,
+            (user_request.nickname,user_request.id)  # 모든 매개변수를 명시적으로 문자열로 변환
+        )
+        db.fetchall()
+        db.commit()
+        db.execute("SELECT * FROM userTable WHERE ID = %s", (user_request.id,))
+        new_user = db.fetchall()
+        db.commit()
+        return User(
+            id=new_user[0][0],
+            nickname=new_user[0][1],
+            email=new_user[0][2],
+            uid=new_user[0][3],
+        )
+
+    except Exception as e:
+        # 오류 발생 시 롤백
+        print(f"오류 발생: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="사용자 생성에 실패했습니다.",
+        )
+    
+
 
 
 @router.get("/get_user_email")
