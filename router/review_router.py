@@ -156,7 +156,7 @@ ORDER BY r.reviewDate DESC;
 """
         )
         dbResult = db.fetchall()
-        print(len(dbResult))
+        
         db.commit()
         return [
             ReviewWithBook(
