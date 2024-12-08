@@ -216,6 +216,10 @@ WHERE (
                   FROM followerTable
                   WHERE followerID = {userID}
               )
+        ) OR r.userID IN (
+            SELECT adminID
+            FROM groupTable
+            WHERE groupID = {groupID}
         )
         AND v.visibilityLevel = 'public'
     )
