@@ -163,6 +163,8 @@ def delete_friend_request(
         dbResponse = deleteFriendRequest(
             senderID=senderID, receiverID=receiverID, db=db
         )
+        db.commit()
+        return dbResponse
     except Exception as e:
         # 오류 발생 시 롤백
         print(f"오류 발생: {e}")
@@ -171,7 +173,6 @@ def delete_friend_request(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="친구 요청 삭제에 실패했습니다.",
         )
-    return dbResponse
 
 
 @router.get("/get_friends")
