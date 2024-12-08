@@ -60,13 +60,12 @@ def review_visibility(
             status_code=status.HTTP_400_BAD_REQUEST, detail="리뷰 생성에 실패했습니다."
         )
 
+
 @router.get("/get_my_review")
-def get_my_review(
-    userID:int,  db = Depends(get_mysql_connection)
-):
+def get_my_review(userID: int, db=Depends(get_mysql_connection)):
     try:
         db.execute(
-                        f"""
+            f"""
 SELECT DISTINCT
     r.ID AS id,
     r.userID AS userID,
@@ -117,8 +116,6 @@ ORDER BY r.reviewDate DESC;
             detail="사용자의 리뷰 리스트 얻기 요청에 실패했습니다.",
         )
 
-    
-
 
 @router.get("/get_timeline_reviews")
 def get_timeline_reviews(
@@ -126,7 +123,7 @@ def get_timeline_reviews(
 ):
     try:
         db.execute(
-                        f"""
+            f"""
 SELECT 
     r.ID AS id,
     r.userID AS userID,
@@ -156,7 +153,7 @@ ORDER BY r.reviewDate DESC;
 """
         )
         dbResult = db.fetchall()
-        
+
         db.commit()
         return [
             ReviewWithBook(
@@ -211,11 +208,15 @@ JOIN reviewVisibilityTable v ON r.ID = v.reviewID
 WHERE (
     (
         r.userID IN (
-            SELECT gm.memberID
-            FROM groupMemberTable gm
-            JOIN followerTable f ON gm.memberID = f.followeeID
-            WHERE gm.groupID = {groupID} AND f.followerID = {userID}
-        ) 
+            SELECT memberID
+            FROM groupMemberTable
+            WHERE groupID = {groupID}
+              AND memberID IN (
+                  SELECT followeeID
+                  FROM followerTable
+                  WHERE followerID = {userID}
+              )
+        )
         AND v.visibilityLevel = 'public'
     )
     OR 
