@@ -192,6 +192,7 @@ def get_group_timeline_reviews(
 SELECT DISTINCT
     r.ID AS id,
     r.userID AS userID,
+    u.nickname AS nickname,
     r.bookID AS bookID,
     r.rating AS rating,
     r.review AS review,
@@ -204,6 +205,7 @@ SELECT DISTINCT
     b.image AS image
 FROM reviewTable r
 JOIN bookTable b ON r.bookID = b.ID
+JOIN userTable u ON r.userID = u.ID
 JOIN reviewVisibilityTable v ON r.ID = v.reviewID
 WHERE (
     (
@@ -235,16 +237,17 @@ ORDER BY r.reviewDate DESC;
             ReviewWithBook(
                 id=review[0],
                 userID=review[1],
-                bookID=review[2],
-                rating=review[3],
-                review=review[4],
-                quote=review[5],
-                reviewDate=review[6],
-                name=review[7],
-                author=review[8],
-                year=review[9],
-                desc=review[10],
-                image=review[11],
+                nickname=review[2],
+                bookID=review[3],
+                rating=review[4],
+                review=review[5],
+                quote=review[6],
+                reviewDate=review[7],
+                name=review[8],
+                author=review[9],
+                year=review[10],
+                desc=review[11],
+                image=review[12],
             )
             for review in dbResult
         ]

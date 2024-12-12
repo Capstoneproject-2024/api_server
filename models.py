@@ -30,6 +30,7 @@ class GetReview(BaseModel):
 class ReviewWithBook(BaseModel):
     id: int
     userID: int
+    nickname : str
     bookID: int
     rating: float
     review: str
