@@ -103,6 +103,7 @@ def get_present_question_answers(
 SELECT 
     q.questionID,
     q.userID,
+    u.nickname AS nickname,
     q.bookID,
     q.quotation,
     q.date,
@@ -112,6 +113,7 @@ SELECT
     b.image
 FROM groupQuestionQuotationTable q
 JOIN bookTable b ON q.bookID = b.id
+JOIN userTable u ON q.userID = u.ID
 WHERE q.questionID = {questionID}
   AND (
       q.userID IN (
@@ -132,13 +134,14 @@ ORDER BY q.date DESC;
             GetQuoteAnswer(
                 questionID=answer[0],
                 userID=answer[1],
-                bookID=answer[2],
-                quotation=answer[3],
-                date=answer[4],
-                name=answer[5],
-                author=answer[6],
-                year=answer[7],
-                image=answer[8],
+                nickname = answer[2],
+                bookID=answer[3],
+                quotation=answer[4],
+                date=answer[5],
+                name=answer[6],
+                author=answer[7],
+                year=answer[8],
+                image=answer[9],
             )
             for answer in dbResult
         ]

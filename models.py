@@ -90,6 +90,17 @@ class Book(BaseModel):
     ISBN: str
 
 
+class BookWithNickname(BaseModel):
+    id: int
+    name: str
+    author: str
+    publisher: str
+    year: str
+    desc: str
+    image: str
+    ISBN: str
+    nickname : str
+
 class BookWihtoutDesc(BaseModel):
     id: int
     name: str
@@ -139,6 +150,7 @@ class PostQuoteAnswer(BaseModel):
 class GetQuoteAnswer(BaseModel):
     questionID: int
     userID: int
+    nickname : str
     bookID: int
     quotation: str
     date: datetime

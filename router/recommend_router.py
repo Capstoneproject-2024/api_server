@@ -14,13 +14,14 @@ def get_question_recommend(
     try:
         db.execute(
             f"""
-SELECT qrb.userID ,b.*
+SELECT 
+    qrb.userID ,
+    b.*,
+    u.nickname AS nickname
 FROM bookTable b
-JOIN questionRecommendBookTable qrb
-ON b.id = qrb.bookID
+JOIN questionRecommendBookTable qrb ON b.id = qrb.bookID
+JOIN userTable u ON qrb.userID = u.ID
 WHERE qrb.questionID = {questionID};
-
-
 """
         )
         dbResult = db.fetchall()
@@ -30,7 +31,7 @@ WHERE qrb.questionID = {questionID};
 
         for book in dbResult:
             recommends[book[0]].append(
-                Book(
+                BookWithNickname(
                     id=book[1],
                     name=book[2],
                     author=book[3],
@@ -39,6 +40,7 @@ WHERE qrb.questionID = {questionID};
                     desc=book[6],
                     image=book[7],
                     ISBN=book[8],
+                    nickname=book[9],
                 )
             )
 
